@@ -1,0 +1,392 @@
+openapi: 3.1.0
+x-stoplight:
+  id: k8tvxtq1wz6cs
+info:
+  title: bidService
+  version: '1.0'
+  summary: api for bid module
+  contact:
+    name: et
+  description: |
+    eap平台下單系統
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /bid/buy:
+    post:
+      summary: ''
+      operationId: post-bid-add
+      responses:
+        '200':
+          description: OK
+          headers:
+            ID_TOKEN:
+              schema:
+                type: string
+        '400':
+          description: Bad Request
+          headers:
+            header-0:
+              schema:
+                type: string
+      description: 掛單功能
+      parameters:
+        - $ref: '#/components/parameters/ID_TOKEN'
+        - $ref: '#/components/parameters/txnSEq'
+      requestBody:
+        $ref: '#/components/requestBodies/PlaceBuyOrderReq'
+      x-internal: false
+    parameters: []
+    get:
+      summary: ''
+      operationId: get-bid-buy
+      responses:
+        '200':
+          $ref: '#/components/responses/ListBuyOrderRes'
+        '400':
+          description: Bad Request
+      parameters:
+        - $ref: '#/components/parameters/txnSEq'
+  /bid/sell:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ListSellOrderRes'
+        '400':
+          description: Bad Request
+      operationId: get-bid-sell
+      parameters:
+        - $ref: '#/components/parameters/ID_TOKEN'
+        - $ref: '#/components/parameters/txnSEq'
+    post:
+      summary: ''
+      operationId: post-bid-sell
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+      parameters:
+        - $ref: '#/components/parameters/ID_TOKEN'
+        - $ref: '#/components/parameters/txnSEq'
+      requestBody:
+        $ref: '#/components/requestBodies/PlaceSellOrderRequest'
+  /bid/user-order:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ListUserOrderRes'
+      operationId: get-bid-user-order
+      parameters:
+        - $ref: '#/components/parameters/ID_TOKEN'
+        - $ref: '#/components/parameters/txnSEq'
+  /bid/match-history:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          $ref: '#/components/responses/MatchHistoryRes'
+        '400':
+          description: Bad Request
+      operationId: get-bid-match-history
+      parameters:
+        - $ref: '#/components/parameters/txnSEq'
+components:
+  schemas:
+    BuyOrderDto:
+      type: object
+      properties:
+        buyOrderList:
+          type: array
+          items:
+            type: object
+            properties:
+              buyPrice:
+                type: integer
+              amount:
+                type: integer
+              bidder:
+                type: string
+              updateTime:
+                type: string
+      x-examples:
+        Example 1:
+          buyOrderList:
+            - buyPrice: 1000
+              amount: 2
+              bidder: tom
+              updateTime: '2025-07-09T18:30:45+08:00'
+    SellOrderDto:
+      type: object
+      properties:
+        sellOrderList:
+          type: array
+          items:
+            type: object
+            properties:
+              sellPrice:
+                type: integer
+              amount:
+                type: integer
+              seller:
+                type: string
+              updateTime:
+                type: string
+      x-examples:
+        Example 1:
+          sellOrderList:
+            - sellPrice: 1000
+              amount: 2
+              seller: tom
+              updateTime: '2025-07-09T18:30:45+08:00'
+    UserOrderDto:
+      type: object
+      properties:
+        userOrderList:
+          type: array
+          items:
+            type: object
+            properties:
+              Price:
+                type: integer
+              amount:
+                type: integer
+              type:
+                type: string
+              updateTime:
+                type: string
+      x-examples:
+        Example 1:
+          userOrderList:
+            - Price: 1000
+              amount: 2
+              type: sell
+              updateTime: '2025-07-09T18:30:45+08:00'
+    MatchHistoryDto:
+      type: object
+      properties:
+        matchOrderList:
+          type: array
+          items:
+            type: object
+            properties:
+              Price:
+                type: integer
+              amount:
+                type: integer
+              bidder:
+                type: string
+              seller:
+                type: string
+              updateTime:
+                type: string
+      x-examples:
+        Example 1:
+          matchOrderList:
+            - Price: 1000
+              amount: 2
+              bidder: tom
+              seller: tommy
+              updateTime: '2025-07-09T18:30:45+08:00'
+  securitySchemes: {}
+  requestBodies:
+    PlaceBuyOrderReq:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              bidPrice:
+                type: integer
+                x-stoplight:
+                  id: 29bigplficzvi
+              amount:
+                type: integer
+                x-stoplight:
+                  id: hd3nm9ffc1jw7
+              bidder:
+                type: string
+                x-stoplight:
+                  id: 1fa560y3mq1zd
+              updateTime:
+                type: string
+                x-stoplight:
+                  id: fh26yqdfy8ve3
+          examples:
+            Example 1:
+              value:
+                price: 1000
+                amount: 1
+                bidder: memberId
+                updateTime: '2025/07/05 12:00:01'
+        application/xml:
+          schema:
+            type: object
+            properties: {}
+        multipart/form-data:
+          schema:
+            type: object
+            properties: {}
+        text/html:
+          schema:
+            type: object
+            properties: {}
+      description: 掛單請求
+    PlaceSellOrderRequest:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sellPrice:
+                type: integer
+              amount:
+                type: integer
+              seller:
+                type: string
+              updateTime:
+                type: string
+            x-examples:
+              Example 1:
+                sellPrice: 1000
+                amount: 1
+                seller: memberId
+                updateTime: '2025/07/05 12:00:01'
+          examples:
+            Example 1:
+              value:
+                sellPrice: 1000
+                amount: 1
+                seller: memberId
+                updateTime: '2025/07/05 12:00:01'
+  parameters:
+    ID_TOKEN:
+      name: ID_TOKEN
+      in: header
+      required: false
+      schema:
+        type: string
+      description: 驗證用戶登入
+    txnSEq:
+      name: txnSEq
+      in: header
+      required: false
+      schema:
+        type: string
+      description: 交易編號
+  responses:
+    ListBuyOrderRes:
+      description: List of buy orders
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BuyOrderDto'
+            x-examples:
+              Example 1:
+                buyOrderList:
+                  - buyPrice: 1000
+                    amount: 2
+                    bidder: tom
+                    updateTime: '2025-07-09T18:30:45+08:00'
+          examples:
+            Example 1:
+              value:
+                buyOrderList:
+                  - buyPrice: 1000
+                    amount: 2
+                    bidder: tom
+                    updateTime: '2025-07-09T18:30:45+08:00'
+        application/xml:
+          schema:
+            type: object
+            properties: {}
+    ListSellOrderRes:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SellOrderDto'
+            x-examples:
+              Example 1:
+                SellOrderList:
+                  sellPrice: 1000
+                  amount: 1
+                  seller: memberId
+                  updateTime: '2025/07/05 12:00:01'
+          examples:
+            Example 1:
+              value:
+                SellOrderList:
+                  - sellPrice: 0
+                    amount: 0
+                    seller: string
+                    updateTime: string
+    ListUserOrderRes:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserOrderDto'
+            x-examples:
+              Example 1:
+                userOrderList:
+                  sellPrice: 1000
+                  amount: 1
+                  seller: memberId
+                  updateTime: '2025/07/05 12:00:01'
+          examples:
+            Example 1:
+              value:
+                userOrderList:
+                  - sellPrice: 0
+                    amount: 0
+                    type: sell
+                    updateTime: '2025-07-09T18:30:45+08:00'
+        application/xml:
+          schema:
+            type: object
+            x-examples:
+              Example 1:
+                UserOrderList:
+                  sellPrice: 1000
+                  amount: 1
+                  seller: memberId
+                  updateTime: '2025/07/05 12:00:01'
+            properties:
+              UserOrderList:
+                type: object
+                properties:
+                  sellPrice:
+                    type: integer
+                  amount:
+                    type: integer
+                  updateTime:
+                    type: string
+                  type:
+                    type: string
+                    x-stoplight:
+                      id: qivrenbmep116
+    MatchHistoryRes:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MatchHistoryDto'
+            x-examples:
+              Example 1:
+                matchOrderList:
+                  Price: 0
+                  amount: 0
+                  updateTime: '2025-07-09T18:30:45+08:00'
+          examples:
+            Example 1:
+              value:
+                matchOrderList:
+                  - Price: 0
+                    amount: 0
+                    updateTime: string

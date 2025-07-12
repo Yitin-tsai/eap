@@ -1,0 +1,42 @@
+package com.eap.eap_order.domain.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "orders", schema = "order_service")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrderEntity {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "type", nullable = false, length = 10)
+  private OrderType type; // 'BUY' or 'SELL'
+
+  @Column(name = "price", nullable = false)
+  private Integer price;
+
+  @Column(name = "amount", nullable = false)
+  private Integer amount;
+
+  @Column(name = "user_uuid", nullable = false)
+  private UUID userUuid;
+
+  @Column(name = "update_time", nullable = false)
+  private LocalDateTime updateTime;
+
+  public enum OrderType {
+    BUY,
+    SELL
+  }
+}
