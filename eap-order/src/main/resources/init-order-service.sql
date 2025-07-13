@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS order_service.orders (
     amount INTEGER NOT NULL,
     user_uuid UUID NOT NULL,
     update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING_ASSET_CHECK'
 );
 
 CREATE TABLE IF NOT EXISTS order_service.match_history (

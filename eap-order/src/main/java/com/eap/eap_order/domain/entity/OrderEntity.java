@@ -35,8 +35,17 @@ public class OrderEntity {
   @Column(name = "update_time", nullable = false)
   private LocalDateTime updateTime;
 
+  @Column(name = "status", nullable = false, length = 32)
+  private OrderStatus status;
+
   public enum OrderType {
     BUY,
     SELL
+  }
+
+  public enum OrderStatus {
+    PENDING_ASSET_CHECK,
+    CONFIRMED,
+    REJECTED
   }
 }

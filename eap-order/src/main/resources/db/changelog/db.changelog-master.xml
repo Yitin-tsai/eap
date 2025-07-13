@@ -55,4 +55,13 @@
             </column>
         </createTable>
     </changeSet>
+
+    <changeSet id="4" author="et">
+    <addColumn tableName="orders" schemaName="order_service">
+        <column name="status" type="VARCHAR(32)" defaultValue="PENDING_ASSET_CHECK">
+            <constraints nullable="false"/>
+        </column>
+    </addColumn>
+</changeSet>
+
 </databaseChangeLog>

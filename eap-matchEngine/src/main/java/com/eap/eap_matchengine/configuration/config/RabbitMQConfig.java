@@ -1,4 +1,4 @@
-package com.eap.eap_order.configuration.config;
+package com.eap.eap_matchengine.configuration.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
@@ -11,23 +11,8 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
   @Bean
-  public TopicExchange orderExchange() {
-    return new TopicExchange("order.exchange");
-  }
-
-  @Bean
-  public Queue orderCreateQueue() {
-    return new Queue("order.create.queue");
-  }
-
-  @Bean
   public Queue orderCreatedQueue() {
     return new Queue("order.created.queue");
-  }
-
-  @Bean
-  public Queue orderRejectedQueue() {
-    return new Queue("order.rejected.queue");
   }
 
   @Bean
@@ -36,18 +21,8 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  public Binding orderCreateBinding(Queue orderCreateQueue, TopicExchange orderExchange) {
-    return BindingBuilder.bind(orderCreateQueue).to(orderExchange).with("order.create");
-  }
-
-  @Bean
   public Binding binding(Queue orderCreatedQueue, TopicExchange orderExchange) {
     return BindingBuilder.bind(orderCreatedQueue).to(orderExchange).with("order.created");
-  }
-
-  @Bean
-  public Binding orderRejectedBinding(Queue orderRejectedQueue, TopicExchange orderExchange) {
-    return BindingBuilder.bind(orderRejectedQueue).to(orderExchange).with("order.rejected");
   }
 
   @Bean
