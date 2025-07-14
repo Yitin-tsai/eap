@@ -1,9 +1,0 @@
-CREATE SCHEMA IF NOT EXISTS wallet_service;
-
-CREATE TABLE IF NOT EXISTS wallet_service.wallets (
-    id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL UNIQUE,
-    available_amount INTEGER NOT NULL DEFAULT 0,
-    locked_amount INTEGER NOT NULL DEFAULT 0,
-    update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);

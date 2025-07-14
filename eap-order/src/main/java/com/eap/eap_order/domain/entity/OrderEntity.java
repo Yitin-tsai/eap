@@ -1,6 +1,8 @@
 package com.eap.eap_order.domain.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.criteria.CriteriaBuilder.In;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -17,7 +19,7 @@ import lombok.NoArgsConstructor;
 public class OrderEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Integer id;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "type", nullable = false, length = 10)
@@ -35,6 +37,7 @@ public class OrderEntity {
   @Column(name = "update_time", nullable = false)
   private LocalDateTime updateTime;
 
+  @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false, length = 32)
   private OrderStatus status;
 

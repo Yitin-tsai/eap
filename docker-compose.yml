@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   postgres:
     image: postgres:15
@@ -13,5 +14,26 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: eap-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    ports:
+      - "5672:5672"    # 應用程式使用 AMQP port
+      - "15672:15672"  # 管理介面 UI 用（瀏覽器打開）
+
+  redis:
+    image: redis:7
+    container_name: eap-redis
+    restart: always
+    ports:
+      - "6379:6379"  # 預設 Redis port
+    volumes:
+      - redisdata:/data
+
 volumes:
   pgdata:
+  redisdata:

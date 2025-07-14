@@ -1,7 +1,8 @@
 spring:
-  redis:
-    host: localhost
-    port: 6379
+
+  data:
+    redis:
+      port: 6379
 
   rabbitmq:
     host: localhost

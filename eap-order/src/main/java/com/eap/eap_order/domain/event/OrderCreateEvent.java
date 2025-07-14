@@ -1,5 +1,6 @@
 package com.eap.eap_order.domain.event;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderCreateEvent {
+public class OrderCreateEvent  {
   private UUID orderId;
   private UUID userId;
   private Integer price;

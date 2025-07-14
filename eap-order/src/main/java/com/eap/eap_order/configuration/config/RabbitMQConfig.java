@@ -4,11 +4,19 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
+
+  @Bean
+  public MessageConverter jsonMessageConverter() {
+    return new Jackson2JsonMessageConverter();
+  }
 
   @Bean
   public TopicExchange orderExchange() {
@@ -36,22 +44,24 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  public Binding orderCreateBinding(Queue orderCreateQueue, TopicExchange orderExchange) {
+  public Binding orderCreateBinding(@Qualifier("orderCreateQueue") Queue orderCreateQueue,
+      TopicExchange orderExchange) {
     return BindingBuilder.bind(orderCreateQueue).to(orderExchange).with("order.create");
   }
 
   @Bean
-  public Binding binding(Queue orderCreatedQueue, TopicExchange orderExchange) {
+  public Binding binding(@Qualifier("orderCreatedQueue") Queue orderCreatedQueue, TopicExchange orderExchange) {
     return BindingBuilder.bind(orderCreatedQueue).to(orderExchange).with("order.created");
   }
 
   @Bean
-  public Binding orderRejectedBinding(Queue orderRejectedQueue, TopicExchange orderExchange) {
+  public Binding orderRejectedBinding(@Qualifier("orderRejectedQueue") Queue orderRejectedQueue,
+      TopicExchange orderExchange) {
     return BindingBuilder.bind(orderRejectedQueue).to(orderExchange).with("order.rejected");
   }
 
   @Bean
-  public Binding matchedBinding(Queue orderMatchedQueue, TopicExchange orderExchange) {
+  public Binding matchedBinding(@Qualifier("orderMatchedQueue") Queue orderMatchedQueue, TopicExchange orderExchange) {
     return BindingBuilder.bind(orderMatchedQueue).to(orderExchange).with("order.matched");
   }
 }

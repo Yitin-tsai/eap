@@ -1,22 +1,19 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/eapdb
+    url: jdbc:postgresql://localhost:5432/eapdb?currentSchema=wallet-service
     username: admin
     password: admin123
-
   liquibase:
     enabled: true                               
     change-log: classpath:db/changelog/db.changelog-master.xml
     contexts: dev                                 
     drop-first: false                                                                
-    
+    default-schema: wallet-service 
   rabbitmq:
     host: localhost
     port: 5672
-    username: admin
-    password: admin123
-    template:
-      message-converter: jackson2JsonMessageConverter
+    username: guest
+    password: guest  
   data:
     redis:
       host: localhost
