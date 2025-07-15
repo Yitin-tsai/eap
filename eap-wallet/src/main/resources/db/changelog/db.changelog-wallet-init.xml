@@ -11,7 +11,7 @@
 
     <changeSet id="wallet-002" author="et">
         <createTable tableName="wallets" schemaName="wallet_service">
-            <column name="id" type="SERIAL">
+            <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="user_id" type="UUID">
