@@ -80,7 +80,7 @@ tasks.named('test') {
 contracts {
 	testFramework = 'JUNIT5'
 	packageWithBaseClasses = 'com.eap.eap_wallet.application'
-	baseClassForTests = 'com.eap.eap_wallet.application.CreateOrderListenerBase'
+	baseClassForTests = 'com.eap.eap_wallet.application.CreateOrderListenerContractBase'
 }
 */
 
