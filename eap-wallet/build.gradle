@@ -1,104 +1,90 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.3'
-	id 'io.spring.dependency-management' version '1.1.7'
-	id 'org.springframework.cloud.contract' version '3.1.8'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.cloud.contract' version '4.3.0'
 }
 
 group = 'com.eap'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    toolchain { languageVersion = JavaLanguageVersion.of(17) }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 ext {
-	set('springCloudVersion', '2021.0.8')
-	set('testcontainersVersion', '1.19.8')
+    set('springCloudVersion', '2023.0.3')
+    set('testcontainersVersion', '1.19.8')
 }
 
 dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-		mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
-	}
-}
-
-dependencies {
-	// 明確加入 groovy 3.0.9 相關依賴，避免 Gradle resolve 到 groovy 4.x
-	testImplementation 'org.codehaus.groovy:groovy:3.0.9'
-	testImplementation 'org.codehaus.groovy:groovy-nio:3.0.9'
-	testImplementation 'org.codehaus.groovy:groovy-json:3.0.9'
-	testImplementation 'org.codehaus.groovy:groovy-xml:3.0.9'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-amqp'
-	implementation 'org.postgresql:postgresql'
-	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
-	implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
-	implementation 'io.swagger.core.v3:swagger-annotations:2.2.20'
-	implementation 'org.liquibase:liquibase-core'
-
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	
-	// Test dependencies
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.amqp:spring-rabbit-test'
-	testImplementation 'org.awaitility:awaitility:4.2.0'
-	testImplementation 'org.mockito:mockito-junit-jupiter'
-	testImplementation 'org.junit.jupiter:junit-jupiter'
-	testImplementation 'org.assertj:assertj-core'
-	testImplementation 'org.testcontainers:junit-jupiter:1.19.8'
-	testImplementation 'org.testcontainers:rabbitmq:1.19.8'
-	testImplementation 'org.testcontainers:postgresql:1.19.8'
-	testImplementation 'com.h2database:h2'
-	testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
-	// 強制 rest-assured 使用 4.5.1，避免 groovy 4.x 衝突
-	testImplementation('io.rest-assured:rest-assured:4.5.1') {
-		exclude group: 'io.rest-assured', module: 'rest-assured-common'
-	}
-	testImplementation('io.rest-assured:json-path:4.5.1') {
-		exclude group: 'io.rest-assured', module: 'rest-assured-common'
-	}
-	testImplementation('io.rest-assured:xml-path:4.5.1') {
-		exclude group: 'io.rest-assured', module: 'rest-assured-common'
-	}
-	
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+    }
 }
 
 configurations.all {
-	resolutionStrategy {
-		force 'org.codehaus.groovy:groovy:3.0.9'
-		force 'org.codehaus.groovy:groovy-nio:3.0.9'
-		force 'org.codehaus.groovy:groovy-json:3.0.9'
-		force 'org.codehaus.groovy:groovy-xml:3.0.9'
-		force 'io.rest-assured:rest-assured:4.5.1'
-		force 'io.rest-assured:json-path:4.5.1'
-		force 'io.rest-assured:xml-path:4.5.1'
-		force 'io.rest-assured:rest-assured-common:4.5.1'
-	}
+    resolutionStrategy.eachDependency { details ->
+        if ((details.requested.group == 'org.apache.groovy' || details.requested.group == 'org.codehaus.groovy')
+            && !details.requested.name.endsWith("bom")) {
+            def mod = details.requested.name
+            details.useTarget "org.apache.groovy:$mod:4.0.27"
+        }
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'org.springframework.boot:spring-boot-starter-integration'
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.20'
+    implementation 'org.liquibase:liquibase-core'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.amqp:spring-rabbit-test'
+    testImplementation 'org.awaitility:awaitility:4.2.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:rabbitmq'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'com.h2database:h2'
+    testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
+
+    testImplementation('io.rest-assured:rest-assured:4.5.1') {
+        exclude group: 'org.apache.groovy'
+        exclude group: 'org.codehaus.groovy'
+    }
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    contractTestGeneratorRuntimeClasspath(platform("org.apache.groovy:groovy-bom:4.0.27"))
+}
+
+contracts {
+    contractsDslDir = file("src/test/resources/contracts")
+    basePackageForTests = "com.eap.wallet.contract"
+    baseClassForTests = "com.eap.eap_wallet.application.BaseContractTest"
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
-
-
-
-
+tasks.named('generateContractTests') {
+    outputs.dir("$buildDir/generated-test-sources/contracts")
+}
