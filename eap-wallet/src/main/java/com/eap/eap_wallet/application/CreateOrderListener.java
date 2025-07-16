@@ -26,8 +26,8 @@ public class CreateOrderListener {
     @RabbitListener(queues = "order.create.queue")
     public void onOrderCreate(OrderCreateEvent event) {
         if (!isWalletEnough(event)) {
-            log.warn("訂單數量超過可用餘額: " + event.getUserId());
-            throw new ReturnException("訂單數量超過可用餘額: " + event.getUserId());
+            log.warn("訂單金額超過可用餘額: " + event.getUserId());
+            throw new ReturnException("訂單金額超過可用餘額: " + event.getUserId());
         }
         OrderCreatedEvent orderCreatedEvent = OrderCreatedEvent.builder()
                 .orderId(event.getOrderId())
@@ -45,8 +45,8 @@ public class CreateOrderListener {
 
         WalletEntity wallet = walletRepository.findByUserId(event.getUserId());
 
-        if (event.getAmount() > wallet.getAvailableAmount()) {
-            log.warn("訂單數量超過可用餘額: " + event.getUserId());
+        if (event.getAmount()*event.getPrice() > wallet.getAvailableCurrency()) {
+            log.warn("訂單總金額超過可用餘額: " + event.getUserId());
             return false;
         }
         return true;

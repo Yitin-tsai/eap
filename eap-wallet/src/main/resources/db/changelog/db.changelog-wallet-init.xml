@@ -28,4 +28,15 @@
             </column>
         </createTable>
     </changeSet>
+
+    <changeSet id="wallet-003" author="et">
+    <addColumn tableName="wallets" schemaName="wallet_service">
+        <column name="available_currency" type="INTEGER" defaultValueNumeric="0">
+            <constraints nullable="false"/>
+        </column>
+        <column name="locked_currency" type="INTEGER" defaultValueNumeric="0">
+            <constraints nullable="false"/>
+        </column>
+    </addColumn>
+</changeSet>
 </databaseChangeLog>

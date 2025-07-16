@@ -35,7 +35,13 @@ public class WalletEntity {
     
     @Column(name = "update_time", nullable = false)
     private LocalDateTime updateTime;
-    
+
+    @Column(name = "available_currency" , nullable = false)
+    private Integer availableCurrency;
+
+    @Column(name = "locked_currency", nullable = false)
+    private Integer lockedCurrency;
+
     @PrePersist
     @PreUpdate
     public void updateTimestamp() {

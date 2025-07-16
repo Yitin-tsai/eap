@@ -2,8 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.3'
 	id 'io.spring.dependency-management' version '1.1.7'
-	// Spring Cloud Contract 插件暫時註解，因為與當前 Gradle 版本不相容
-	// id 'org.springframework.cloud.contract' version '4.0.4'
+	id 'org.springframework.cloud.contract' version '3.1.8'
 }
 
 group = 'com.eap'
@@ -63,24 +62,22 @@ dependencies {
 	testImplementation 'org.testcontainers:rabbitmq:1.19.8'
 	testImplementation 'org.testcontainers:postgresql:1.19.8'
 	testImplementation 'com.h2database:h2'
-	
-	// Spring Cloud Contract dependencies (optional)
-	testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
-	testImplementation 'org.springframework.cloud:spring-cloud-contract-stub-runner'
+    testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
 	
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'org.codehaus.groovy:groovy:3.0.9'
+        force 'org.codehaus.groovy:groovy-nio:3.0.9'
+    }
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
 
-// Spring Cloud Contract 配置暫時註解
-/*
-contracts {
-	testFramework = 'JUNIT5'
-	packageWithBaseClasses = 'com.eap.eap_wallet.application'
-	baseClassForTests = 'com.eap.eap_wallet.application.CreateOrderListenerContractBase'
-}
-*/
+
+
 
