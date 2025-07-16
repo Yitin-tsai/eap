@@ -25,7 +25,7 @@ repositories {
 }
 
 ext {
-	set('springCloudVersion', '2023.0.3')
+	set('springCloudVersion', '2021.0.8')
 	set('testcontainersVersion', '1.19.8')
 }
 
@@ -37,6 +37,11 @@ dependencyManagement {
 }
 
 dependencies {
+	// 明確加入 groovy 3.0.9 相關依賴，避免 Gradle resolve 到 groovy 4.x
+	testImplementation 'org.codehaus.groovy:groovy:3.0.9'
+	testImplementation 'org.codehaus.groovy:groovy-nio:3.0.9'
+	testImplementation 'org.codehaus.groovy:groovy-json:3.0.9'
+	testImplementation 'org.codehaus.groovy:groovy-xml:3.0.9'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -62,16 +67,32 @@ dependencies {
 	testImplementation 'org.testcontainers:rabbitmq:1.19.8'
 	testImplementation 'org.testcontainers:postgresql:1.19.8'
 	testImplementation 'com.h2database:h2'
-    testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
+	testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
+	// 強制 rest-assured 使用 4.5.1，避免 groovy 4.x 衝突
+	testImplementation('io.rest-assured:rest-assured:4.5.1') {
+		exclude group: 'io.rest-assured', module: 'rest-assured-common'
+	}
+	testImplementation('io.rest-assured:json-path:4.5.1') {
+		exclude group: 'io.rest-assured', module: 'rest-assured-common'
+	}
+	testImplementation('io.rest-assured:xml-path:4.5.1') {
+		exclude group: 'io.rest-assured', module: 'rest-assured-common'
+	}
 	
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 configurations.all {
-    resolutionStrategy {
-        force 'org.codehaus.groovy:groovy:3.0.9'
-        force 'org.codehaus.groovy:groovy-nio:3.0.9'
-    }
+	resolutionStrategy {
+		force 'org.codehaus.groovy:groovy:3.0.9'
+		force 'org.codehaus.groovy:groovy-nio:3.0.9'
+		force 'org.codehaus.groovy:groovy-json:3.0.9'
+		force 'org.codehaus.groovy:groovy-xml:3.0.9'
+		force 'io.rest-assured:rest-assured:4.5.1'
+		force 'io.rest-assured:json-path:4.5.1'
+		force 'io.rest-assured:xml-path:4.5.1'
+		force 'io.rest-assured:rest-assured-common:4.5.1'
+	}
 }
 
 tasks.named('test') {
