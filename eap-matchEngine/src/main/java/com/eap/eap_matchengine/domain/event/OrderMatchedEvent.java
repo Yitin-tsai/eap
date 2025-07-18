@@ -14,4 +14,5 @@ public class OrderMatchedEvent {
   private int amount;
   private Integer matchId;
   private LocalDateTime matchedAt;
+  private String orderType; // BUY or SELL
 }

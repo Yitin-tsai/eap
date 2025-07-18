@@ -2,10 +2,13 @@ package com.eap.eap_matchengine.application;
 
 import com.eap.eap_matchengine.domain.event.OrderCreatedEvent;
 import com.eap.eap_matchengine.domain.event.OrderMatchedEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import java.util.Optional;
+
+import java.util.List;
+
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,36 +17,55 @@ import org.springframework.stereotype.Service;
 public class MatchingEngineService {
 
   private final RedisOrderBookService orderBookService;
+
   private final RabbitTemplate rabbitTemplate;
 
-  public void tryMatch() {
-    Optional<OrderCreatedEvent> buyOpt = orderBookService.peekTopBuyOrder();
-    Optional<OrderCreatedEvent> sellOpt = orderBookService.peekTopSellOrder();
+  public void tryMatch(OrderCreatedEvent incomingOrder) {
+    List<OrderCreatedEvent> matchableOrders = orderBookService.getMatchableOrders(incomingOrder);
 
-    if (buyOpt.isEmpty() || sellOpt.isEmpty()) return;
+    if (matchableOrders.isEmpty()) {
+      try {
+        orderBookService.addOrder(incomingOrder);
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
+      return;
+    }
 
-    OrderCreatedEvent buy = buyOpt.get();
-    OrderCreatedEvent sell = sellOpt.get();
+    for (OrderCreatedEvent matchOrder : matchableOrders) {
 
-    if (buy.getPrice() < sell.getPrice()) return; 
+      if (incomingOrder.getQuantity() == 0) {
+        break;
+      }
 
-    int matchedAmount = Math.min(buy.getQuantity(), sell.getQuantity());
-    int matchedPrice = sell.getPrice(); 
+      int matchedAmount = Math.min(incomingOrder.getQuantity(), matchOrder.getQuantity());
 
-    OrderMatchedEvent matchedEvent =
-        OrderMatchedEvent.builder()
-            .buyerId(buy.getUserId())
-            .sellerId(sell.getUserId())
-            .amount(matchedAmount)
-            .price(matchedPrice)
-            .matchedAt(LocalDateTime.now())
-            .build();
+      incomingOrder.setQuantity(incomingOrder.getQuantity() - matchedAmount);
+      matchOrder.setQuantity(matchOrder.getQuantity() - matchedAmount);
 
-   
-    rabbitTemplate.convertAndSend("order.exchange", "order.matched", matchedEvent);
+      OrderMatchedEvent matchedEvent = OrderMatchedEvent.builder()
+          .buyerId(incomingOrder.getType().equalsIgnoreCase("BUY") ? incomingOrder.getUserId() : matchOrder.getUserId())
+          .sellerId(
+              incomingOrder.getType().equalsIgnoreCase("SELL") ? incomingOrder.getUserId() : matchOrder.getUserId())
+          .price(matchOrder.getPrice())
+          .amount(matchedAmount)
+          .matchedAt(LocalDateTime.now())
+          .orderType(incomingOrder.getType())
+          .build();
 
-    
-    orderBookService.removeOrder(buy);
-    orderBookService.removeOrder(sell);
+      rabbitTemplate.convertAndSend("order.exchange", "order.matched", matchedEvent);
+
+      if (matchOrder.getQuantity() == 0) {
+        orderBookService.removeOrder(matchOrder);
+      }
+    }
+
+    if (incomingOrder.getQuantity() > 0) {
+      try {
+        orderBookService.addOrder(incomingOrder);
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
+    }
   }
 }

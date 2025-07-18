@@ -21,6 +21,11 @@ public class RabbitMQConfig {
   }
 
   @Bean
+  public TopicExchange orderExchange() {
+    return new TopicExchange("order.exchange");
+  }
+
+  @Bean
   public Binding binding(Queue orderCreatedQueue, TopicExchange orderExchange) {
     return BindingBuilder.bind(orderCreatedQueue).to(orderExchange).with("order.created");
   }

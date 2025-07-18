@@ -1,0 +1,29 @@
+description: When BaseContractTest sends OrderCreatedEvent, matching engine should emit OrderMatchedEvent when orders match
+label: order_created_to_matched
+name: order_created_to_matched
+input:
+  triggeredBy: BaseContractTest.sendOrderCreatedEvent()
+  message:
+    messageFrom: order.exchange
+    messageBody:
+      orderId: "e052f2bb-8bb9-4f0f-9c0c-385a2b16c50a"
+      userId: "123f2bb8-8bb9-4f0f-9c0c-385a2b16c50a"
+      price: 100
+      quantity: 10
+      type: "SELL"
+      createdAt: "2025-07-18T10:00:00"
+    messageHeaders:
+      contentType: application/json
+      rabbitmq_routingKey: order.created
+outputMessage:
+  sentTo: order.exchange
+  body:
+    buyerId: "456f2bb8-8bb9-4f0f-9c0c-385a2b16c50b"
+    sellerId: "123f2bb8-8bb9-4f0f-9c0c-385a2b16c50a"
+    price: 100
+    amount: 10
+    matchedAt: "2025-07-18T10:00:01"
+  headers:
+    contentType: application/json
+    rabbitmq_routingKey: order.matched
+

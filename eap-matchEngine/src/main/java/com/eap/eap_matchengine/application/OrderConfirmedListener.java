@@ -11,15 +11,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class OrderConfirmedListener {
 
-  private final RedisOrderBookService orderBookService;
   private final MatchingEngineService matchingEngineService;
 
   @RabbitListener(queues = "order.created.queue")
   public void handleConfirmedOrder(OrderCreatedEvent event) throws JsonProcessingException {
     System.out.println("Confirmed order received: " + event);
 
-    orderBookService.addOrder(event);
-
-    matchingEngineService.tryMatch();
+    matchingEngineService.tryMatch(event);
   }
 }
