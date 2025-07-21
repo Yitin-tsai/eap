@@ -5,9 +5,20 @@ plugins {
     id 'java'
 }
 
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+ext {
+    set('springCloudVersion', "2023.0.1")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
 }
 
@@ -17,6 +28,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.postgresql:postgresql'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     compileOnly "org.projectlombok:lombok"
     annotationProcessor "org.projectlombok:lombok"
@@ -27,12 +39,14 @@ dependencies {
     testImplementation 'org.testcontainers:rabbitmq'
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
+    testImplementation 'org.springframework.integration:spring-integration-core'
+
 }
 
-contracts {
-    contractsDslDir = file("src/test/resources/contracts")
-    basePackageForTests = "com.eap.eap_wallet"
-    baseClassForTests = "com.eap.eap_wallet.BaseContractTest"
+tasks.named("generateContractTests") {
+    contractsDslDir = file("src/contractTest/resources/contracts")
+    basePackageForTests.set("com.eap.eap_wallet")
+    baseClassForTests.set("com.eap.eap_wallet.application.BaseContractTest")
 }
 
 tasks.named('test') {

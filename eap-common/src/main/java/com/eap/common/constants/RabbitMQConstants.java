@@ -7,6 +7,7 @@ package com.eap.common.constants;
 public class RabbitMQConstants {
     
     // Queue 名稱
+    public static final String ORDER_CREATE_QUEUE = "order.create.queue";
     public static final String ORDER_CREATED_QUEUE = "order.created.queue";
     public static final String ORDER_MATCHED_QUEUE = "order.matched.queue";
     public static final String WALLET_MATCHED_QUEUE = "wallet.matched.queue";
@@ -15,6 +16,7 @@ public class RabbitMQConstants {
     public static final String ORDER_EXCHANGE = "order.exchange";
     
     // Routing Key
+    public static final String ORDER_CREATE_KEY = "order.create";
     public static final String ORDER_CREATED_KEY = "order.created";
     public static final String ORDER_MATCHED_KEY = "order.matched";
     public static final String WALLET_MATCHED_KEY = "wallet.matched";

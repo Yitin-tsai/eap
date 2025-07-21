@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureMessageVerifier;
@@ -19,10 +20,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-
 import static org.mockito.ArgumentMatchers.any;
 
-@SpringBootTest(classes = {MatchingEngineService.class, BaseContractTest.TestConfiguration.class})
+@SpringBootTest(classes = { MatchingEngineService.class, BaseContractTest.TestConfiguration.class })
 @AutoConfigureMessageVerifier
 @ActiveProfiles("test")
 public class BaseContractTest {
@@ -42,6 +42,9 @@ public class BaseContractTest {
     @MockitoBean
     private RedisOrderBookService redisOrderBookService;
 
+    @MockitoBean
+    private RabbitTemplate rabbitTemplate;
+
     @BeforeEach
     public void setup() {
         // 準備測試資料：模擬已存在的買單
@@ -57,6 +60,10 @@ public class BaseContractTest {
         // 當收到賣單時，返回匹配的買單
         Mockito.when(redisOrderBookService.getMatchableOrders(any(OrderCreatedEvent.class)))
                 .thenReturn(List.of(existingBuyOrder));
+
+        Mockito.doNothing().when(rabbitTemplate).convertAndSend(Mockito.any(String.class),
+                Mockito.any(String.class),
+                Mockito.any(Object.class));
     }
 
     public void sendOrderCreatedEvent() {

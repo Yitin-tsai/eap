@@ -34,10 +34,10 @@ dependencies {
     testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
 }
 
-contracts {
-    contractsDslDir = file("src/test/resources/contracts")
-    basePackageForTests = "com.eap.eap_matchengine"
-    baseClassForTests = "com.eap.eap_matchengine.BaseContractTest"
+tasks.named("generateContractTests") {
+    contractsDslDir = file("src/contractTest/resources/contracts")
+    basePackageForTests.set("com.eap.eap_matchengine") // 依你實際的 package 名稱調整
+    baseClassForTests.set("com.eap.eap_matchengine.BaseContractTest") // 請確認這個 class 存在
 }
 
 tasks.named('test') {

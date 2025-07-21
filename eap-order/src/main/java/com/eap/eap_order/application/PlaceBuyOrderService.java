@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import static com.eap.common.constants.RabbitMQConstants.*;
 
 @Service
 @Slf4j
@@ -33,7 +34,7 @@ public class PlaceBuyOrderService {
               .build();
 
       // Publish the event to RabbitMQ
-      rabbitTemplate.convertAndSend("order.exchange", "order.create", event);
+      rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_CREATE_KEY, event);
       log.info("Buy order creat and event published: {}", event);
     } catch (Exception e) {
       

@@ -6,13 +6,14 @@ import com.eap.eap_order.domain.event.OrderMatchedEvent;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import static com.eap.common.constants.RabbitMQConstants.*;
 
 @Component
 public class MatchEventListener {
 
   @Autowired private MathedOrderRepository matchOrderRepository;
 
-  @RabbitListener(queues = "order.matched.queue")
+  @RabbitListener(queues = ORDER_MATCHED_QUEUE)
   public void handleOrderMatched(OrderMatchedEvent event) {
     System.out.println("Received OrderMatchedEvent: " + event);
 

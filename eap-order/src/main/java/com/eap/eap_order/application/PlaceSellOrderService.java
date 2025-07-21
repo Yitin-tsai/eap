@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import static com.eap.common.constants.RabbitMQConstants.*;
 
 @Service
 public class PlaceSellOrderService {
@@ -30,8 +31,7 @@ public class PlaceSellOrderService {
               .build();
 
       // Publish the event to RabbitMQ
-      rabbitTemplate.convertAndSend("order.exchange", "order.create", event);
-      ;
+      rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_CREATE_KEY, event);
     } catch (Exception e) {
       // Handle exception, e.g., log it or rethrow it
       System.err.println("Error saving sell order: " + e.getMessage());
