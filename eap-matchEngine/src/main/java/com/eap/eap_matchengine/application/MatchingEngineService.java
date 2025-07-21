@@ -9,17 +9,36 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+import static com.eap.common.constants.RabbitMQConstants.*;
+
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service responsible for matching buy and sell orders in the trading system.
+ * Implements the order matching logic and manages the order lifecycle through the order book.
+ */
 @Service
 @RequiredArgsConstructor
 public class MatchingEngineService {
 
   private final RedisOrderBookService orderBookService;
-
   private final RabbitTemplate rabbitTemplate;
 
+  /**
+   * Attempts to match an incoming order with existing orders in the order book.
+   * The matching process follows these steps:
+   * 1. Checks for matching orders in the opposite order book
+   * 2. If no matches found, adds the order to the appropriate order book
+   * 3. If matches found, processes them in order:
+   *    - Matches the maximum possible quantity
+   *    - Updates the quantities of both orders
+   *    - Creates and publishes a matched event
+   *    - Removes fully matched orders
+   *    - Adds remaining quantity back to order book if partially matched
+   *
+   * @param incomingOrder The new order to be matched
+   */
   public void tryMatch(OrderCreatedEvent incomingOrder) {
     List<OrderCreatedEvent> matchableOrders = orderBookService.getMatchableOrders(incomingOrder);
 
@@ -53,8 +72,8 @@ public class MatchingEngineService {
           .orderType(incomingOrder.getType())
           .build();
 
-      rabbitTemplate.convertAndSend("order.exchange", "order.matched", matchedEvent);
-
+      rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_MATCHED_KEY, matchedEvent);
+      rabbitTemplate.convertAndSend(ORDER_EXCHANGE, WALLET_MATCHED_KEY, matchedEvent);
       if (matchOrder.getQuantity() == 0) {
         orderBookService.removeOrder(matchOrder);
       }

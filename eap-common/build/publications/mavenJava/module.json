@@ -1,0 +1,109 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.eap",
+    "module": "eap-common",
+    "version": "1.0.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "eap-common-1.0.0.jar",
+          "url": "eap-common-1.0.0.jar",
+          "size": 1269,
+          "sha512": "eb3c855ba8f2a94da8112cf75082064383c80ff94f3655ed629f24d12da16ac7b57c6ebc24a51e710deee91512acd88fc04100ab8908ebb613f2f886a57c92ef",
+          "sha256": "4476f92894c76eb94a3c3423ac3613914ca357b7593edf98709341ba8a1ebdbc",
+          "sha1": "4b15020b677586ebd3ad0ba66126a8e582f531c1",
+          "md5": "c6611f4b72ed1ec9f21ba42451ce4cdc"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-starter-amqp",
+          "version": {
+            "requires": "3.2.3"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "eap-common-1.0.0.jar",
+          "url": "eap-common-1.0.0.jar",
+          "size": 1269,
+          "sha512": "eb3c855ba8f2a94da8112cf75082064383c80ff94f3655ed629f24d12da16ac7b57c6ebc24a51e710deee91512acd88fc04100ab8908ebb613f2f886a57c92ef",
+          "sha256": "4476f92894c76eb94a3c3423ac3613914ca357b7593edf98709341ba8a1ebdbc",
+          "sha1": "4b15020b677586ebd3ad0ba66126a8e582f531c1",
+          "md5": "c6611f4b72ed1ec9f21ba42451ce4cdc"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "eap-common-1.0.0-sources.jar",
+          "url": "eap-common-1.0.0-sources.jar",
+          "size": 1220,
+          "sha512": "663cee81901c1f01e748e7167213934f30370a3de9f4f4fa5352f288a613b9a20270f5f72207e401da898d663cf916993668ba96fafdd9ec65492a1da9cb9d21",
+          "sha256": "b2f13339a726ac701714d1d7b7eb89dd3da18ad83463d105960d104f47285ba2",
+          "sha1": "a44a27756b6262ab19b56958126e04c740ca95db",
+          "md5": "0c238713e16b57005e0cf5aafa6298c7"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "eap-common-1.0.0-javadoc.jar",
+          "url": "eap-common-1.0.0-javadoc.jar",
+          "size": 83304,
+          "sha512": "f6ed75c79b6595eaade64bbf25a20746ba9359559f26c103b9f34d9bfb9c68aa363ca8b1661082d402df676b8ebf47a07ed2d8cf71aa4591db25f0a8b5d707a8",
+          "sha256": "7c3b67727ad0ce24fe9ac088f1556621fd24e078783cfa0f8d05a32c667ae682",
+          "sha1": "830209353d049cc7333974dd675076085a38d445",
+          "md5": "fff9648e375ebba41bf8153fcb02fcb3"
+        }
+      ]
+    }
+  ]
+}

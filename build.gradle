@@ -1,0 +1,58 @@
+plugins {
+    id 'org.springframework.boot' version '3.5.3' apply false
+    id 'io.spring.dependency-management' version '1.1.7' 
+    id 'org.springframework.cloud.contract' version '4.3.0' apply false
+    id 'org.openapi.generator' version '7.6.0' apply false
+}
+
+group = 'com.eap'
+version = '1.0.0'
+
+ext {
+    springCloudVersion = '2023.0.3'
+    testcontainersVersion = '1.19.8'
+    lombokVersion = '1.18.32'
+    groovyVersion = '4.0.27'
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if ((details.requested.group == 'org.apache.groovy' || details.requested.group == 'org.codehaus.groovy')
+                && !details.requested.name.endsWith("bom")) {
+                details.useTarget "org.apache.groovy:${details.requested.name}:${groovyVersion}"
+            }
+        }
+    }
+
+    dependencies {
+        compileOnly "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+        testImplementation "org.junit.jupiter:junit-jupiter"
+        testImplementation "org.assertj:assertj-core"
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+    }
+}

@@ -34,11 +34,6 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  public Queue orderRejectedQueue() {
-    return new Queue("order.rejected.queue");
-  }
-
-  @Bean
   public Queue orderMatchedQueue() {
     return new Queue("order.matched.queue");
   }
@@ -54,11 +49,6 @@ public class RabbitMQConfig {
     return BindingBuilder.bind(orderCreatedQueue).to(orderExchange).with("order.created");
   }
 
-  @Bean
-  public Binding orderRejectedBinding(@Qualifier("orderRejectedQueue") Queue orderRejectedQueue,
-      TopicExchange orderExchange) {
-    return BindingBuilder.bind(orderRejectedQueue).to(orderExchange).with("order.rejected");
-  }
 
   @Bean
   public Binding matchedBinding(@Qualifier("orderMatchedQueue") Queue orderMatchedQueue, TopicExchange orderExchange) {
