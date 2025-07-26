@@ -36,6 +36,8 @@ public class CreateOrderListener {
             throw new ReturnException("訂單可用電量不足: " + event.getUserId());
         }
 
+        lockAsset(event);
+
         OrderCreatedEvent orderCreatedEvent = OrderCreatedEvent.builder()
                 .orderId(event.getOrderId())
                 .userId(event.getUserId())
@@ -77,5 +79,22 @@ public class CreateOrderListener {
 
         }
         return true;
+    }
+
+    private void lockAsset(OrderCreateEvent event) {
+        WalletEntity wallet = walletRepository.findByUserId(event.getUserId());
+
+        if ("BUY".equals(event.getOrderType())) {
+            int lockCurrency = event.getPrice() * event.getAmount();
+            wallet.setAvailableCurrency(wallet.getAvailableCurrency() - lockCurrency);
+            wallet.setLockedCurrency(wallet.getLockedCurrency() + lockCurrency);
+        } else if ("SELL".equals(event.getOrderType())) {
+            int lockAmount = event.getAmount();
+            wallet.setAvailableAmount(wallet.getAvailableAmount() - lockAmount);
+            wallet.setLockedAmount(wallet.getLockedAmount() + lockAmount);
+        }
+
+        walletRepository.save(wallet);
+        log.info("🔒 資產鎖定完成，用戶: {}", event.getUserId());
     }
 }
