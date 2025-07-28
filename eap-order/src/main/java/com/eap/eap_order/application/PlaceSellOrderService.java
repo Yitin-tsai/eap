@@ -2,7 +2,7 @@ package com.eap.eap_order.application;
 
 import com.eap.eap_order.controller.dto.req.PlaceSellOrderReq;
 import com.eap.eap_order.domain.entity.OrderEntity.OrderType;
-import com.eap.eap_order.domain.event.OrderCreateEvent;
+import com.eap.common.event.OrderCreateEvent;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

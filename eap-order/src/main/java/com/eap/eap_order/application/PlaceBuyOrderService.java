@@ -2,7 +2,7 @@ package com.eap.eap_order.application;
 
 import com.eap.eap_order.controller.dto.req.PlaceBuyOrderReq;
 import com.eap.eap_order.domain.entity.OrderEntity.OrderType;
-import com.eap.eap_order.domain.event.OrderCreateEvent;
+import com.eap.common.event.OrderCreateEvent;
 
 import lombok.extern.slf4j.Slf4j;
 

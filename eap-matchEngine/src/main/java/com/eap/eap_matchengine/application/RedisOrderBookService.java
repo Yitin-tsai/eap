@@ -1,6 +1,7 @@
 package com.eap.eap_matchengine.application;
 
-import com.eap.eap_matchengine.domain.event.OrderCreatedEvent;
+import com.eap.common.event.OrderCancelEvent;
+import com.eap.common.event.OrderCreatedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
@@ -35,8 +36,11 @@ public class RedisOrderBookService {
   public void addOrder(OrderCreatedEvent event) throws JsonProcessingException {
     String key = event.getType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
 
-    String value = new ObjectMapper().writeValueAsString(event);
-    redisTemplate.opsForZSet().add(key, value, event.getPrice());
+    String orderJson = new ObjectMapper().writeValueAsString(event);
+    redisTemplate.opsForZSet().add(key, orderJson, event.getPrice());
+
+    String orderIdKey = "order:" + event.getOrderId();
+    redisTemplate.opsForValue().set(orderIdKey, orderJson);
   }
 
   /**
@@ -97,6 +101,32 @@ public class RedisOrderBookService {
       e.printStackTrace();
       return List.of();
     }
+  }
+
+  public boolean cancelOrder(OrderCancelEvent event) {
+    String orderIdKey = "order:" + event.getOrderId();
+    String orderJson = redisTemplate.opsForValue().get(orderIdKey);
+
+    if (orderJson != null) {
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        OrderCreatedEvent order = mapper.readValue(orderJson, OrderCreatedEvent.class);
+        String bookKey = order.getType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
+
+        // 從 ZSet 中移除
+        boolean removed = redisTemplate.opsForZSet().remove(bookKey, orderJson) > 0;
+
+        // 從 ID 映射中移除
+        if (removed) {
+          redisTemplate.delete(orderIdKey);
+        }
+
+        return removed;
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    return false;
   }
 
 }

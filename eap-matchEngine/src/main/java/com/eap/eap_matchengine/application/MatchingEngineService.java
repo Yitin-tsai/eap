@@ -1,7 +1,7 @@
 package com.eap.eap_matchengine.application;
 
-import com.eap.eap_matchengine.domain.event.OrderCreatedEvent;
-import com.eap.eap_matchengine.domain.event.OrderMatchedEvent;
+import com.eap.common.event.OrderCreatedEvent;
+import com.eap.common.event.OrderMatchedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.time.LocalDateTime;

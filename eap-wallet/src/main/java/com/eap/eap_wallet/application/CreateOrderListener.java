@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 import com.eap.eap_wallet.configuration.ReturnException;
 import com.eap.eap_wallet.configuration.repository.WalletRepository;
 import com.eap.eap_wallet.domain.entity.WalletEntity;
-import com.eap.eap_wallet.domain.event.OrderCreateEvent;
-import com.eap.eap_wallet.domain.event.OrderCreatedEvent;
+import com.eap.common.event.OrderCreateEvent;
+import com.eap.common.event.OrderCreatedEvent;
 import static com.eap.common.constants.RabbitMQConstants.*;
 
 import lombok.extern.slf4j.Slf4j;

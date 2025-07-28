@@ -2,7 +2,7 @@ package com.eap.eap_order.application;
 
 import com.eap.eap_order.configuration.repository.MathedOrderRepository;
 import com.eap.eap_order.domain.entity.MatchOrderEntity;
-import com.eap.eap_order.domain.event.OrderMatchedEvent;
+import com.eap.common.event.OrderMatchedEvent;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

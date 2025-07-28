@@ -1,7 +1,7 @@
 package com.eap.eap_matchengine.application;
 
 
-import com.eap.eap_matchengine.domain.event.OrderCreatedEvent;
+import com.eap.common.event.OrderCreatedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

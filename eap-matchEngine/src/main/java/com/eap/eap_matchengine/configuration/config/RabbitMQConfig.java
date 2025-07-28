@@ -50,6 +50,12 @@ public class RabbitMQConfig {
         return new TopicExchange(ORDER_EXCHANGE);
     }
 
+
+    @Bean
+    public Queue orderCancelQueue() {
+        return new Queue(ODER_CANCEL_QUEUE);
+    }
+
     /**
      * 訂單創建消息綁定
      */
@@ -80,6 +86,12 @@ public class RabbitMQConfig {
                 .with(WALLET_MATCHED_KEY);
     }
 
+    @Bean
+    public Binding orderCancelBinding(Queue orderCancelQueue, TopicExchange orderExchange) {
+        return BindingBuilder.bind(orderCancelQueue)
+                .to(orderExchange)
+                .with(ORDER_CANCEL_KEY);
+    }
     /**
      * 配置消息轉換器，使用 JSON 格式
      */
