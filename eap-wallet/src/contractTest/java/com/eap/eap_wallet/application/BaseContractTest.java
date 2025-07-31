@@ -3,7 +3,7 @@ package com.eap.eap_wallet.application;
 
 import com.eap.eap_wallet.configuration.repository.WalletRepository;
 import com.eap.eap_wallet.domain.entity.WalletEntity;
-import com.eap.eap_wallet.domain.event.OrderCreateEvent;
+import com.eap.common.event.OrderCreateEvent;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

@@ -13,7 +13,7 @@
         <module name="eap.eap-order.main" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
+    <bytecodeTargetLevel target="17">
       <module name="eap-matchengine" target="17" />
       <module name="eap-matchengine.main" target="17" />
       <module name="eap-matchengine.test" target="17" />
