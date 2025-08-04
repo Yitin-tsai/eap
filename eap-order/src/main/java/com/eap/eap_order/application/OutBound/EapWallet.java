@@ -1,16 +1,14 @@
 package com.eap.eap_order.application.OutBound;
 
 
-import com.eap.common.event.OrderCreateEvent;
-import org.springframework.web.bind.annotation.GetMapping;
+import com.eap.common.event.OrderCreatedEvent;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.cloud.openfeign.FeignClient;
 
-@FeignClient(name = "eap-wallet", url = "${eap.wallet.url}")
-@RequestMapping("/v1/wallet")
+@FeignClient(name = "eap-wallet", url = "${eap.wallet.base-url}")
 public interface EapWallet {
 
-    @PostMapping("/check")
-    public boolean checkWallet(OrderCreateEvent event) ;
+    @PostMapping("/v1/wallet/check")
+    public boolean checkWallet(OrderCreatedEvent event) ;
 }

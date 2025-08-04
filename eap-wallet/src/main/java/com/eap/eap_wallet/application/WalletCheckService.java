@@ -1,6 +1,7 @@
 package com.eap.eap_wallet.application;
 
 import com.eap.common.event.OrderCreateEvent;
+import com.eap.common.event.OrderCreatedEvent;
 import com.eap.eap_wallet.configuration.repository.WalletRepository;
 import com.eap.eap_wallet.domain.entity.WalletEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,7 @@ public class WalletCheckService {
     WalletRepository walletRepository;
 
 
-    public boolean checkWallet(OrderCreateEvent event) {
+    public boolean checkWallet(OrderCreatedEvent event) {
         if (!isWalletEnough(event)) {
             log.warn("訂單金額超過可用餘額: " + event.getUserId());
             return false;
@@ -32,14 +33,14 @@ public class WalletCheckService {
     }
 
 
-    private boolean isWalletEnough(OrderCreateEvent event) {
+    private boolean isWalletEnough(OrderCreatedEvent event) {
 
         WalletEntity wallet = walletRepository.findByUserId(event.getUserId());
         if (wallet == null) {
             log.warn("找不到使用者錢包: " + event.getUserId());
             return false;
         }
-        if (event.getOrderType() == "BUY" && event.getAmount() * event.getPrice() > wallet.getAvailableCurrency()) {
+        if (event.getType() == "BUY" && event.getQuantity() * event.getPrice() > wallet.getAvailableCurrency()) {
             log.warn("訂單總金額超過可用餘額: " + event.getUserId());
             return false;
         }
@@ -47,7 +48,7 @@ public class WalletCheckService {
         return true;
     }
 
-    private boolean isWalletEnoughForSell(OrderCreateEvent event) {
+    private boolean isWalletEnoughForSell(OrderCreatedEvent event) {
 
         WalletEntity wallet = walletRepository.findByUserId(event.getUserId());
         if (wallet == null) {
@@ -55,7 +56,7 @@ public class WalletCheckService {
             return false;
 
         }
-        if (event.getOrderType() == "SELL" && event.getAmount() > wallet.getAvailableAmount()) {
+        if (event.getType() == "SELL" && event.getQuantity() > wallet.getAvailableAmount()) {
             log.warn("訂單總電量超過可供應電量: " + event.getUserId());
             return false;
 
@@ -63,15 +64,15 @@ public class WalletCheckService {
         return true;
     }
 
-    private void lockAsset(OrderCreateEvent event) {
+    private void lockAsset(OrderCreatedEvent event) {
         WalletEntity wallet = walletRepository.findByUserId(event.getUserId());
 
-        if ("BUY".equals(event.getOrderType())) {
-            int lockCurrency = event.getPrice() * event.getAmount();
+        if ("BUY".equals(event.getType())) {
+            int lockCurrency = event.getPrice() * event.getQuantity();
             wallet.setAvailableCurrency(wallet.getAvailableCurrency() - lockCurrency);
             wallet.setLockedCurrency(wallet.getLockedCurrency() + lockCurrency);
-        } else if ("SELL".equals(event.getOrderType())) {
-            int lockAmount = event.getAmount();
+        } else if ("SELL".equals(event.getType())) {
+            int lockAmount = event.getQuantity();
             wallet.setAvailableAmount(wallet.getAvailableAmount() - lockAmount);
             wallet.setLockedAmount(wallet.getLockedAmount() + lockAmount);
         }

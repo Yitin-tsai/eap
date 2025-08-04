@@ -61,6 +61,7 @@ class CreateOrderListenerTest {
                 .userId(testUserId)
                 .availableAmount(100)
                 .availableCurrency(1000000000)
+                .lockedCurrency(0)
                 .lockedAmount(0)
                 .updateTime(LocalDateTime.now())
                 .build();

@@ -1,1 +1,97 @@
-/.vscode
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Gradle
+.gradle/
+build/
+!src/**/build/
+!build.gradle
+!settings.gradle
+!gradlew
+!gradlew.bat
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+*.rej
+.DS_Store
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Test/Reports
+/reports/
+/test-results/
+*.html
+
+# Misc
+*.lock
+*.bin
+*.probe
+*.xml
+!src/**/*.xml
+
+# Application config
+!src/main/resources/application.yml
+!src/main/resources/application-*.yml
+
+# Exclude generated docs/libs except source
+*.javadoc.jar
+*.sources.jar
+
+# Exclude everything in build/libs except source jars
+/build/libs/*.jar
+!/build/libs/*-sources.jar
+!/build/libs/*-javadoc.jar
+
+# Exclude contract test stubs
+/stubs/
+
+# Exclude publication outputs
+/publications/
+
+# Exclude generated sources
+/generated/
+
+# Exclude tmp
+/tmp/
+
+# Exclude gradle wrapper jar
+/gradle/wrapper/gradle-wrapper.jar
+
+# Exclude dbnavigator and project files
+/dbnavigator.xml
+/Project.xml
+
+# Exclude code style configs
+/codeStyleConfig.xml
+
+# Exclude execution history
+/executionHistory.*
+/fileHashes.*
+/resourceHashesCache.bin
+/buildOutputCleanup.lock
+/checksums.lock
+
+# Problems report
+/problems-report.html
+
+# Only track your code and config files
+!src/**
+!build.gradle
+!settings.gradle
+!README.md
+!docker-compose.yml
+

@@ -1,0 +1,9 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+     "java.import.gradle.enabled": true,
+  "java.import.gradle.wrapper.enabled": true,
+  "java.import.gradle.java.home": "/path/to/your/java17", // 可選
+  "java.project.referencedLibraries": [
+    "lib/**/*.jar"]
+}
