@@ -7,7 +7,7 @@
 # Gradle
 .gradle/
 build/
-!/src/**/build/
+!src/**/build/
 !build.gradle
 !settings.gradle
 !gradlew
@@ -40,12 +40,12 @@ Thumbs.db
 *.lock
 *.bin
 *.probe
-
-# Exclude all xml except config and changelog
 *.xml
+!src/**/*.xml
+
+# Application config
 !src/main/resources/application.yml
 !src/main/resources/application-*.yml
-!src/main/resources/db/changelog/*.xml
 
 # Exclude generated docs/libs except source
 *.javadoc.jar
@@ -89,8 +89,9 @@ Thumbs.db
 /problems-report.html
 
 # Only track your code and config files
-!/src/**
+!src/**
 !build.gradle
 !settings.gradle
 !README.md
 !docker-compose.yml
+

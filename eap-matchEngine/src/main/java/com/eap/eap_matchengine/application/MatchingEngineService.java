@@ -40,50 +40,40 @@ public class MatchingEngineService {
    * @param incomingOrder The new order to be matched
    */
   public void tryMatch(OrderCreatedEvent incomingOrder) {
-    List<OrderCreatedEvent> matchableOrders = orderBookService.getMatchableOrders(incomingOrder);
-
-    if (matchableOrders.isEmpty()) {
-      try {
-        orderBookService.addOrder(incomingOrder);
-      } catch (JsonProcessingException e) {
-        e.printStackTrace();
-      }
-      return;
-    }
-
-    for (OrderCreatedEvent matchOrder : matchableOrders) {
-
-      if (incomingOrder.getQuantity() == 0) {
+    boolean isBuy = incomingOrder.getType().equalsIgnoreCase("BUY");
+    while (incomingOrder.getQuantity() > 0) {
+      OrderCreatedEvent matchOrder = orderBookService.getAndRemoveBestMatchOrderLua(isBuy, incomingOrder.getPrice());
+      if (matchOrder == null) {
+        // 沒有可撮合對手單，將剩餘訂單加回 orderbook
+        try {
+          orderBookService.addOrder(incomingOrder);
+        } catch (JsonProcessingException e) {
+          e.printStackTrace();
+        }
         break;
       }
-
       int matchedAmount = Math.min(incomingOrder.getQuantity(), matchOrder.getQuantity());
-
       incomingOrder.setQuantity(incomingOrder.getQuantity() - matchedAmount);
       matchOrder.setQuantity(matchOrder.getQuantity() - matchedAmount);
-
       OrderMatchedEvent matchedEvent = OrderMatchedEvent.builder()
-          .buyerId(incomingOrder.getType().equalsIgnoreCase("BUY") ? incomingOrder.getUserId() : matchOrder.getUserId())
-          .sellerId(
-              incomingOrder.getType().equalsIgnoreCase("SELL") ? incomingOrder.getUserId() : matchOrder.getUserId())
+          .buyerId(isBuy ? incomingOrder.getUserId() : matchOrder.getUserId())
+          .sellerId(isBuy ? matchOrder.getUserId() : incomingOrder.getUserId())
           .price(matchOrder.getPrice())
           .amount(matchedAmount)
           .matchedAt(LocalDateTime.now())
           .orderType(incomingOrder.getType())
           .build();
-
       rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_MATCHED_KEY, matchedEvent);
       rabbitTemplate.convertAndSend(ORDER_EXCHANGE, WALLET_MATCHED_KEY, matchedEvent);
-      if (matchOrder.getQuantity() == 0) {
+      if (matchOrder.getQuantity() > 0) {
+        // 對手單部分成交，剩餘部分加回 orderbook
+        try {
+          orderBookService.addOrder(matchOrder);
+        } catch (JsonProcessingException e) {
+          e.printStackTrace();
+        }
+      } else {
         orderBookService.removeOrder(matchOrder);
-      }
-    }
-
-    if (incomingOrder.getQuantity() > 0) {
-      try {
-        orderBookService.addOrder(incomingOrder);
-      } catch (JsonProcessingException e) {
-        e.printStackTrace();
       }
     }
   }
