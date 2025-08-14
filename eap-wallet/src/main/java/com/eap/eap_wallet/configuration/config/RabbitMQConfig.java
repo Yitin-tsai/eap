@@ -36,7 +36,7 @@ public class RabbitMQConfig {
 
   @Bean
   public Queue orderMatchedQueue() {
-    return new Queue(ORDER_MATCHED_QUEUE);
+    return new Queue(WALLET_MATCHED_QUEUE);
   }
 
   @Bean

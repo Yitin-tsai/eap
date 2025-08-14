@@ -48,3 +48,5 @@ logging:
 eap:
   wallet:
     base-url: http://localhost:8081/eap-wallet
+  matchEngine:
+    base-url: http://localhost:8082/eap-match-engine

@@ -3,7 +3,7 @@ package com.eap.eap_order.application;
 import com.eap.common.event.OrderCreatedEvent;
 import com.eap.eap_order.application.OutBound.EapWallet;
 import com.eap.eap_order.controller.dto.req.PlaceSellOrderReq;
-import com.eap.eap_order.domain.entity.OrderEntity.OrderType;
+import com.eap.eap_order.domain.entity.Order.OrderType;
 import com.eap.common.event.OrderCreateEvent;
 
 import java.time.LocalDateTime;

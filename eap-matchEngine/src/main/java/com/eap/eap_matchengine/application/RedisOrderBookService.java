@@ -29,6 +29,7 @@ public class RedisOrderBookService {
     private final String BUY_ORDERBOOK_KEY = "orderbook:buy";
     private final String SELL_ORDERBOOK_KEY = "orderbook:sell";
     private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper; // 注入Spring配置的ObjectMapper
 
     /**
      * Adds a new order to the appropriate order book (buy/sell).
@@ -43,7 +44,7 @@ public class RedisOrderBookService {
         redisTemplate.opsForZSet().add(key, event.getOrderId().toString(), event.getPrice());
         // 2. 存入 orderId 對應內容
         String orderIdKey = "order:" + event.getOrderId();
-        String orderJson = new ObjectMapper().writeValueAsString(event);
+        String orderJson = objectMapper.writeValueAsString(event);
         redisTemplate.opsForValue().set(orderIdKey, orderJson);
         // 3. 存入 user 對應的 set
         String userOrdersKey = "user:" + event.getUserId() + ":orders";
@@ -70,8 +71,7 @@ public class RedisOrderBookService {
         String orderJson = redisTemplate.opsForValue().get(orderIdKey);
         if (orderJson != null) {
             try {
-                ObjectMapper mapper = new ObjectMapper();
-                OrderCreatedEvent order = mapper.readValue(orderJson, OrderCreatedEvent.class);
+                OrderCreatedEvent order = objectMapper.readValue(orderJson, OrderCreatedEvent.class);
                 String bookKey = order.getType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
                 // 從 ZSet 中移除 orderId
                 boolean removed = redisTemplate.opsForZSet().remove(bookKey, event.getOrderId().toString()) > 0;
@@ -95,13 +95,12 @@ public class RedisOrderBookService {
         if (orderIds == null || orderIds.isEmpty()) {
             return List.of();
         }
-        ObjectMapper mapper = new ObjectMapper();
         return orderIds.stream()
                 .map(orderId -> {
                     String orderJson = redisTemplate.opsForValue().get("order:" + orderId);
                     if (orderJson != null) {
                         try {
-                            return mapper.readValue(orderJson, OrderCreatedEvent.class);
+                            return objectMapper.readValue(orderJson, OrderCreatedEvent.class);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -121,21 +120,28 @@ public class RedisOrderBookService {
      */
     public OrderCreatedEvent getAndRemoveBestMatchOrderLua(boolean isBuy, int price) {
         String zsetKey = isBuy ? SELL_ORDERBOOK_KEY : BUY_ORDERBOOK_KEY;
-        // 買單：取最低價賣單（score <= price）
-        // 賣單：取最高價買單（score >= price）
-        String lua = isBuy ?
+
+        final String buyLua =
                 "local r = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', ARGV[1], 'LIMIT', 0, 1); " +
-                        "if #r > 0 then redis.call('ZREM', KEYS[1], r[1]); return r[1]; else return nil; end"
-                :
-                "local r = redis.call('ZREVRANGEBYSCORE', KEYS[1], ARGV[1], '+inf', 'LIMIT', 0, 1); " +
-                        "if #r > 0 then redis.call('ZREM', KEYS[1], r[1]); return r[1]; else return nil; end";
+        "if #r > 0 then redis.call('ZREM', KEYS[1], r[1]); return r[1]; else return nil; end";
+
+        final String sellLua =
+                "local r = redis.call('ZREVRANGEBYSCORE', KEYS[1], '+inf', ARGV[1], 'LIMIT', 0, 1); " +
+        "if #r > 0 then redis.call('ZREM', KEYS[1], r[1]); return r[1]; else return nil; end";
+
+
+
+
+        final String lua = isBuy ? buyLua : sellLua;
+        String priceArg = Integer.toString(price);
+
         String orderId = redisTemplate.execute((RedisCallback<String>) (connection) -> {
             Object res = connection.eval(
                     lua.getBytes(),
                     ReturnType.VALUE,
                     1,
                     zsetKey.getBytes(),
-                    String.valueOf(price).getBytes()
+                    priceArg.getBytes()
             );
             return res != null ? new String((byte[]) res) : null;
         });
@@ -143,7 +149,7 @@ public class RedisOrderBookService {
         String orderJson = redisTemplate.opsForValue().get("order:" + orderId);
         if (orderJson == null) return null;
         try {
-            return new ObjectMapper().readValue(orderJson, OrderCreatedEvent.class);
+            return objectMapper.readValue(orderJson, OrderCreatedEvent.class);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -177,11 +183,10 @@ public class RedisOrderBookService {
         }
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
             return results.stream()
                     .map(str -> {
                         try {
-                            return mapper.readValue(str, OrderCreatedEvent.class);
+                            return objectMapper.readValue(str, OrderCreatedEvent.class);
                         } catch (Exception e) {
                             e.printStackTrace();
                             return null;

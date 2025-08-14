@@ -3,48 +3,39 @@ plugins {
     id 'maven-publish'
 }
 
-apply plugin: 'io.spring.dependency-management'
-
 group = 'com.eap'
 version = '1.0.0'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
-    withSourcesJar()
-    withJavadocJar()
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
-}
+    // Jackson dependencies for JSON serialization/deserialization
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
 
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.3"
-    }
-}
-
-configurations.all {
-    resolutionStrategy {
-        force 'org.springframework.boot:spring-boot-starter-amqp:3.2.3'
-    }
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            versionMapping {
-                usage('java-api') {
-                    fromResolutionOf('runtimeClasspath')
-                }
-                usage('java-runtime') {
-                    fromResolutionResult()
-                }
-            }
         }
     }
-    repositories {
-        mavenLocal()
-    }
+}
+
+jar {
+    enabled = true
+    archiveClassifier = ''
 }

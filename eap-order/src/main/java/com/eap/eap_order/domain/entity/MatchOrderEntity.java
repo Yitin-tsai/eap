@@ -34,4 +34,7 @@ public class MatchOrderEntity {
 
   @Column(name = "update_time", nullable = false)
   private LocalDateTime updateTime;
+
+  @Column(name = "order_type" , nullable = false, length = 10)
+  private String orderType; // BUY or SELL
 }

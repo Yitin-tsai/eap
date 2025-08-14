@@ -22,15 +22,15 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin123
     ports:
-      - "5672:5672"    # 應用程式使用 AMQP port
-      - "15672:15672"  # 管理介面 UI 用（瀏覽器打開）
+      - "5672:5672"
+      - "15672:15672"
 
   redis:
     image: redis:7
     container_name: eap-redis
     restart: always
     ports:
-      - "6379:6379"  # 預設 Redis port
+      - "6379:6379"
     volumes:
       - redisdata:/data
 

@@ -11,6 +11,7 @@ import java.util.List;
 
 import static com.eap.common.constants.RabbitMQConstants.*;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MatchingEngineService {
 
   private final RedisOrderBookService orderBookService;
@@ -47,6 +49,7 @@ public class MatchingEngineService {
         // 沒有可撮合對手單，將剩餘訂單加回 orderbook
         try {
           orderBookService.addOrder(incomingOrder);
+          log.info("No matching order found, added to order book: {}", incomingOrder);
         } catch (JsonProcessingException e) {
           e.printStackTrace();
         }
@@ -69,11 +72,14 @@ public class MatchingEngineService {
         // 對手單部分成交，剩餘部分加回 orderbook
         try {
           orderBookService.addOrder(matchOrder);
+          log.info("Partial match, remaining order added back to order book: {}", matchOrder);
+          log.info("Partial match, remaining incomeodre: {}", incomingOrder);
         } catch (JsonProcessingException e) {
           e.printStackTrace();
         }
       } else {
         orderBookService.removeOrder(matchOrder);
+        log.info("Order fully matched and removed from order book: {}", matchOrder);
       }
     }
   }

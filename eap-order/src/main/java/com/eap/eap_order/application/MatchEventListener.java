@@ -26,6 +26,7 @@ public class MatchEventListener {
                         .price(event.getPrice())
                         .amount(event.getAmount())
                         .updateTime(event.getMatchedAt())
+                        .orderType(event.getOrderType())
                         .build();
 
         matchOrderRepository.save(matchOrder);

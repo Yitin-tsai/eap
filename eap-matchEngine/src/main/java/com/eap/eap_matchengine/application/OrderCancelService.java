@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderCancelService {
 
-    @Autowired  RedisOrderBookService redisService;
+    @Autowired
+    RedisOrderBookService redisService;
 
 
     public boolean execute(OrderCancelEvent cancelEvent) {
