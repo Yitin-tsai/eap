@@ -10,16 +10,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderCreatedEvent {
+@Builder
+public class OrderFailedEvent {
     private UUID orderId;
     private UUID userId;
-    private Integer price;
-    private Integer ammount;
-    private String orderType;
+    private String reason;
+    private String failureType; // INSUFFICIENT_BALANCE, INSUFFICIENT_AMOUNT, WALLET_NOT_FOUND, etc.
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-    private LocalDateTime createdAt;
+    private LocalDateTime failedAt;
 }

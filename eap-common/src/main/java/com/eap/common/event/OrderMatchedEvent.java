@@ -13,12 +13,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderMatchedEvent {
-  private UUID buyerId;
-  private UUID sellerId;
-  private int price;
-  private int amount;
-  private Integer matchId;
-  private LocalDateTime matchedAt;
-  private String orderType; // BUY or SELL
+    private UUID buyerId;
+    private UUID sellerId;
+    private Integer originBuyerPrice;
+    private Integer originSellerPrice;
+    private Integer dealPrice;
+    private Integer amount;
+    private Integer matchId;
+    private LocalDateTime matchedAt;
+    private String orderType; // BUY or SELL
 }
-

@@ -20,6 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/bid")
 @Validated
@@ -36,14 +40,20 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "掛單成功")
     @ApiResponse(responseCode = "400", description = "請求錯誤")
     @PostMapping("/buy")
-    public ResponseEntity<Void> postBidAdd(
+    public ResponseEntity<Map<String, Object>> postBidAdd(
             @Parameter(description = "驗證用戶登入") @RequestHeader(value = "ID_TOKEN", required = false) String idToken,
             @Parameter(description = "交易編號") @RequestHeader(value = "txnSEq", required = false) String txnSeq,
             @Parameter(description = "掛買單請求") @Valid @RequestBody PlaceBuyOrderReq request) {
 
         log.info("掛買單請求: {}", request);
-        placeBuyOrderService.execute(request);
-        return ResponseEntity.ok().build();
+        UUID orderId = placeBuyOrderService.execute(request);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orderId", orderId);
+        response.put("status", "PENDING_WALLET_CHECK");
+        response.put("message", "訂單已提交，正在檢查餘額...");
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(operationId = "get-bid-buy", summary = "查詢買單列表", description = "取得目前所有買入訂單")

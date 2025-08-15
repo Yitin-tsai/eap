@@ -22,28 +22,22 @@ public class PlaceSellOrderService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
-    @Autowired
-    EapWallet eapWallet;
 
     public void placeSellOrder(PlaceSellOrderReq request) {
 
-        OrderCreatedEvent event =
-                OrderCreatedEvent.builder()
+        OrderCreateEvent event =
+                OrderCreateEvent.builder()
                         .orderId(UUID.randomUUID())
                         .userId(request.getSeller())
                         .price(request.getSellPrice())
-                        .quantity(request.getAmount())
-                        .type(OrderType.SELL.name())
+                        .amount(request.getAmount())
+                        .orderType(OrderType.SELL.name())
                         .createdAt(LocalDateTime.now())
                         .build();
         log.info("Creating sell order: {}", event);
-        if (eapWallet.checkWallet(event)) {
-            {
-                rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_CREATED_KEY, event);
-                log.info("Buy order creat and event published: {}", event);
-            }
-            log.error("wallet check failed for user: {}", request.getSeller());
 
-        }
+        // 直接發送事件，讓wallet-service異步處理
+        rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_CREATE_KEY, event);
+        log.info("Sell order create event published: {}", event);
     }
 }

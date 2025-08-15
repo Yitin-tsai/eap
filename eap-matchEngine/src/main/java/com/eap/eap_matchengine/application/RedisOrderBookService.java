@@ -5,7 +5,6 @@ import com.eap.common.event.OrderCreatedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.List;
 import java.util.UUID;
@@ -39,7 +38,7 @@ public class RedisOrderBookService {
      * @throws JsonProcessingException if the order cannot be serialized to JSON
      */
     public void addOrder(OrderCreatedEvent event) throws JsonProcessingException {
-        String key = event.getType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
+        String key = event.getOrderType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
         // 1. 存入 orderbook ZSet，value 為 orderId
         redisTemplate.opsForZSet().add(key, event.getOrderId().toString(), event.getPrice());
         // 2. 存入 orderId 對應內容
@@ -57,7 +56,7 @@ public class RedisOrderBookService {
      * @param event The order event to be removed
      */
     public void removeOrder(OrderCreatedEvent event) {
-        String key = event.getType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
+        String key = event.getOrderType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
         redisTemplate.opsForZSet().remove(key, event.getOrderId().toString());
         String orderIdKey = "order:" + event.getOrderId();
         redisTemplate.delete(orderIdKey);
@@ -72,7 +71,7 @@ public class RedisOrderBookService {
         if (orderJson != null) {
             try {
                 OrderCreatedEvent order = objectMapper.readValue(orderJson, OrderCreatedEvent.class);
-                String bookKey = order.getType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
+                String bookKey = order.getOrderType().equalsIgnoreCase("BUY") ? BUY_ORDERBOOK_KEY : SELL_ORDERBOOK_KEY;
                 // 從 ZSet 中移除 orderId
                 boolean removed = redisTemplate.opsForZSet().remove(bookKey, event.getOrderId().toString()) > 0;
                 // 從 ID 映射中移除
@@ -165,7 +164,7 @@ public class RedisOrderBookService {
      * @return List of matching orders sorted by best price (lowest for sells, highest for buys)
      */
     public List<OrderCreatedEvent> getMatchableOrders(OrderCreatedEvent incomingOrder) {
-        boolean isBuy = incomingOrder.getType().equalsIgnoreCase("BUY");
+        boolean isBuy = incomingOrder.getOrderType().equalsIgnoreCase("BUY");
         String oppositeKey = isBuy ? SELL_ORDERBOOK_KEY : BUY_ORDERBOOK_KEY;
 
 

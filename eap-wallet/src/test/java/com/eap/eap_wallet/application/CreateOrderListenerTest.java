@@ -79,8 +79,8 @@ class CreateOrderListenerTest {
         assertEquals(testOrderId, capturedEvent.getOrderId());
         assertEquals(testUserId, capturedEvent.getUserId());
         assertEquals(1000, capturedEvent.getPrice());
-        assertEquals(50, capturedEvent.getQuantity());
-        assertEquals("BUY", capturedEvent.getType());
+        assertEquals(50, capturedEvent.getAmmount());
+        assertEquals("BUY", capturedEvent.getOrderType());
         assertEquals(testCreatedAt, capturedEvent.getCreatedAt());
     }
 

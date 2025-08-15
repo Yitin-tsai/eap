@@ -23,7 +23,7 @@ public class MatchEventListener {
                 MatchOrderEntity.builder()
                         .buyerUuid(event.getBuyerId())
                         .sellerUuid(event.getSellerId())
-                        .price(event.getPrice())
+                        .price(event.getDealPrice())
                         .amount(event.getAmount())
                         .updateTime(event.getMatchedAt())
                         .orderType(event.getOrderType())

@@ -7,8 +7,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-
 import static com.eap.common.constants.RabbitMQConstants.*;
 
 import lombok.extern.slf4j.Slf4j;
@@ -42,8 +40,8 @@ public class MatchingEngineService {
    * @param incomingOrder The new order to be matched
    */
   public void tryMatch(OrderCreatedEvent incomingOrder) {
-    boolean isBuy = incomingOrder.getType().equalsIgnoreCase("BUY");
-    while (incomingOrder.getQuantity() > 0) {
+    boolean isBuy = incomingOrder.getOrderType().equalsIgnoreCase("BUY");
+    while (incomingOrder.getAmmount() > 0) {
       OrderCreatedEvent matchOrder = orderBookService.getAndRemoveBestMatchOrderLua(isBuy, incomingOrder.getPrice());
       if (matchOrder == null) {
         // 沒有可撮合對手單，將剩餘訂單加回 orderbook
@@ -55,20 +53,22 @@ public class MatchingEngineService {
         }
         break;
       }
-      int matchedAmount = Math.min(incomingOrder.getQuantity(), matchOrder.getQuantity());
-      incomingOrder.setQuantity(incomingOrder.getQuantity() - matchedAmount);
-      matchOrder.setQuantity(matchOrder.getQuantity() - matchedAmount);
+      int matchedAmount = Math.min(incomingOrder.getAmmount(), matchOrder.getAmmount());
+      incomingOrder.setAmmount(incomingOrder.getAmmount() - matchedAmount);
+      matchOrder.setAmmount(matchOrder.getAmmount() - matchedAmount);
       OrderMatchedEvent matchedEvent = OrderMatchedEvent.builder()
           .buyerId(isBuy ? incomingOrder.getUserId() : matchOrder.getUserId())
           .sellerId(isBuy ? matchOrder.getUserId() : incomingOrder.getUserId())
-          .price(matchOrder.getPrice())
+          .originBuyerPrice(isBuy ? incomingOrder.getPrice(): matchOrder.getPrice())
+          .originSellerPrice(isBuy ? matchOrder.getPrice() : incomingOrder.getPrice())
+          .dealPrice(matchOrder.getPrice())
           .amount(matchedAmount)
           .matchedAt(LocalDateTime.now())
-          .orderType(incomingOrder.getType())
+          .orderType(incomingOrder.getOrderType())
           .build();
       rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_MATCHED_KEY, matchedEvent);
       rabbitTemplate.convertAndSend(ORDER_EXCHANGE, WALLET_MATCHED_KEY, matchedEvent);
-      if (matchOrder.getQuantity() > 0) {
+      if (matchOrder.getAmmount() > 0) {
         // 對手單部分成交，剩餘部分加回 orderbook
         try {
           orderBookService.addOrder(matchOrder);

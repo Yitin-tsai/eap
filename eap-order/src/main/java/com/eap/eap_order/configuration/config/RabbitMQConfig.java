@@ -40,6 +40,11 @@ public class RabbitMQConfig {
   }
 
   @Bean
+  public Queue orderFailedQueue() {
+    return new Queue(ORDER_FAILED_QUEUE);
+  }
+
+  @Bean
   public Binding orderCreateBinding(@Qualifier("orderCreateQueue") Queue orderCreateQueue,
       TopicExchange orderExchange) {
     return BindingBuilder.bind(orderCreateQueue).to(orderExchange).with(ORDER_CREATE_KEY);
@@ -54,5 +59,10 @@ public class RabbitMQConfig {
   @Bean
   public Binding matchedBinding(@Qualifier("orderMatchedQueue") Queue orderMatchedQueue, TopicExchange orderExchange) {
     return BindingBuilder.bind(orderMatchedQueue).to(orderExchange).with(ORDER_MATCHED_KEY);
+  }
+
+  @Bean
+  public Binding failedBinding(@Qualifier("orderFailedQueue") Queue orderFailedQueue, TopicExchange orderExchange) {
+    return BindingBuilder.bind(orderFailedQueue).to(orderExchange).with(ORDER_FAILED_KEY);
   }
 }

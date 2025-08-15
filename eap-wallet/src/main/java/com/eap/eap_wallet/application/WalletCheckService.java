@@ -1,6 +1,5 @@
 package com.eap.eap_wallet.application;
 
-import com.eap.common.event.OrderCreateEvent;
 import com.eap.common.event.OrderCreatedEvent;
 import com.eap.eap_wallet.configuration.repository.WalletRepository;
 import com.eap.eap_wallet.domain.entity.WalletEntity;
@@ -40,7 +39,7 @@ public class WalletCheckService {
             log.warn("找不到使用者錢包: " + event.getUserId());
             return false;
         }
-        if (event.getType() == "BUY" && event.getQuantity() * event.getPrice() > wallet.getAvailableCurrency()) {
+        if (event.getOrderType() == "BUY" && event.getAmmount() * event.getPrice() > wallet.getAvailableCurrency()) {
             log.warn("訂單總金額超過可用餘額: " + event.getUserId());
             return false;
         }
@@ -56,7 +55,7 @@ public class WalletCheckService {
             return false;
 
         }
-        if (event.getType() == "SELL" && event.getQuantity() > wallet.getAvailableAmount()) {
+        if (event.getOrderType() == "SELL" && event.getAmmount() > wallet.getAvailableAmount()) {
             log.warn("訂單總電量超過可供應電量: " + event.getUserId());
             return false;
 
@@ -67,12 +66,12 @@ public class WalletCheckService {
     private void lockAsset(OrderCreatedEvent event) {
         WalletEntity wallet = walletRepository.findByUserId(event.getUserId());
 
-        if ("BUY".equals(event.getType())) {
-            int lockCurrency = event.getPrice() * event.getQuantity();
+        if ("BUY".equals(event.getOrderType())) {
+            int lockCurrency = event.getPrice() * event.getAmmount();
             wallet.setAvailableCurrency(wallet.getAvailableCurrency() - lockCurrency);
             wallet.setLockedCurrency(wallet.getLockedCurrency() + lockCurrency);
-        } else if ("SELL".equals(event.getType())) {
-            int lockAmount = event.getQuantity();
+        } else if ("SELL".equals(event.getOrderType())) {
+            int lockAmount = event.getAmmount();
             wallet.setAvailableAmount(wallet.getAvailableAmount() - lockAmount);
             wallet.setLockedAmount(wallet.getLockedAmount() + lockAmount);
         }

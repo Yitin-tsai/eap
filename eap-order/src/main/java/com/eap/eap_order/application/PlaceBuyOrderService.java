@@ -23,26 +23,24 @@ public class PlaceBuyOrderService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
-    @Autowired
-    private EapWallet eapWallet;
 
-    public void execute(PlaceBuyOrderReq request) {
+    public UUID execute(PlaceBuyOrderReq request) {
 
-        OrderCreatedEvent event =
-                OrderCreatedEvent.builder()
-                        .orderId(UUID.randomUUID())
-                        .userId(request.getBidder())
-                        .price(request.getBidPrice())
-                        .quantity(request.getAmount())
-                        .type(OrderType.BUY.name())
-                        .createdAt(LocalDateTime.now())
-                        .build();
+        OrderCreateEvent event =
+            OrderCreateEvent.builder()
+                .orderId(UUID.randomUUID())
+                .userId(request.getBidder())
+                .price(request.getBidPrice())
+                .amount(request.getAmount())
+                .orderType(OrderType.BUY.name())
+                .createdAt(LocalDateTime.now())
+                .build();
         log.info("Creating buy order: {}", event);
-        if (eapWallet.checkWallet(event)) {
-            rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_CREATED_KEY, event);
-            log.info("Buy order created and event published: {}", event);
-        } else {
-            log.error("wallet check failed for user: {}", request.getBidder());
-        }
+
+        // 直接發送事件，讓wallet-service異步處理
+        rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_CREATE_KEY, event);
+        log.info("Buy order create event published: {}", event);
+
+        return event.getOrderId();
     }
 }
