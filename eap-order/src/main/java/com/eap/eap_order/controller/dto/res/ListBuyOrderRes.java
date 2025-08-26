@@ -11,6 +11,7 @@ public class ListBuyOrderRes {
     @Data
     public class buyorder {
         private Integer bidPrice;
+
         private Integer amount;
 
         private String bidder;

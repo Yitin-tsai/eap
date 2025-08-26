@@ -1,10 +1,10 @@
 package com.eap.eap_wallet.application;
 
-import com.eap.eap_wallet.configuration.ReturnException;
 import com.eap.eap_wallet.configuration.repository.WalletRepository;
 import com.eap.eap_wallet.domain.entity.WalletEntity;
 import com.eap.common.event.OrderCreateEvent;
 import com.eap.common.event.OrderCreatedEvent;
+import com.eap.common.event.OrderFailedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,13 +85,13 @@ class CreateOrderListenerTest {
     }
 
     @Test
-    void testOnOrderCreate_WhenWalletHasInsufficientBalance_ShouldThrowReturnException() {
+    void testOnOrderCreate_WhenWalletHasInsufficientBalance_ShouldSendOrderFailedEvent() {
         // Given
         OrderCreateEvent orderCreateEvent = OrderCreateEvent.builder()
                 .orderId(testOrderId)
                 .userId(testUserId)
                 .price(1000)
-                .amount(150) // 超過可用餘額
+                .amount(150) // 超過可用餘額 (150 * 1000 = 150,000 > 1)
                 .orderType("BUY")
                 .createdAt(testCreatedAt)
                 .build();
@@ -100,20 +100,80 @@ class CreateOrderListenerTest {
                 .id(1L)
                 .userId(testUserId)
                 .availableAmount(100)
-                .availableCurrency(1)
+                .availableCurrency(1) // 可用貨幣很少，不足以購買
                 .lockedAmount(0)
+                .lockedCurrency(0)
                 .updateTime(LocalDateTime.now())
                 .build();
 
         when(walletRepository.findByUserId(testUserId)).thenReturn(walletEntity);
 
-        // When & Then
-        ReturnException exception = assertThrows(ReturnException.class, 
-            () -> createOrderListener.onOrderCreate(orderCreateEvent));
+        // When
+        createOrderListener.onOrderCreate(orderCreateEvent);
 
+        // Then
+        // 驗證發送了 OrderFailedEvent
+        ArgumentCaptor<OrderFailedEvent> failedEventCaptor = ArgumentCaptor.forClass(OrderFailedEvent.class);
+        verify(rabbitTemplate).convertAndSend(eq("order.exchange"), eq("order.failed"), failedEventCaptor.capture());
+
+        OrderFailedEvent capturedFailedEvent = failedEventCaptor.getValue();
+        assertEquals(testOrderId, capturedFailedEvent.getOrderId());
+        assertEquals(testUserId, capturedFailedEvent.getUserId());
+        assertEquals("餘額不足", capturedFailedEvent.getReason());
+        assertEquals("INSUFFICIENT_BALANCE", capturedFailedEvent.getFailureType());
+        assertNotNull(capturedFailedEvent.getFailedAt());
 
         // 驗證沒有發送 OrderCreatedEvent
-        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), any(OrderCreatedEvent.class));
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), eq("order.created"), any(OrderCreatedEvent.class));
+        
+        // 驗證沒有保存錢包（因為沒有鎖定資產）
+        verify(walletRepository, never()).save(any(WalletEntity.class));
+    }
+
+    @Test
+    void testOnOrderCreate_WhenWalletHasInsufficientAmountForSell_ShouldSendOrderFailedEvent() {
+        // Given
+        OrderCreateEvent orderCreateEvent = OrderCreateEvent.builder()
+                .orderId(testOrderId)
+                .userId(testUserId)
+                .price(1000)
+                .amount(150) // 超過可用電量
+                .orderType("SELL")
+                .createdAt(testCreatedAt)
+                .build();
+
+        WalletEntity walletEntity = WalletEntity.builder()
+                .id(1L)
+                .userId(testUserId)
+                .availableAmount(100) // 可用電量不足
+                .availableCurrency(1000000)
+                .lockedAmount(0)
+                .lockedCurrency(0)
+                .updateTime(LocalDateTime.now())
+                .build();
+
+        when(walletRepository.findByUserId(testUserId)).thenReturn(walletEntity);
+
+        // When
+        createOrderListener.onOrderCreate(orderCreateEvent);
+
+        // Then
+        // 驗證發送了 OrderFailedEvent
+        ArgumentCaptor<OrderFailedEvent> failedEventCaptor = ArgumentCaptor.forClass(OrderFailedEvent.class);
+        verify(rabbitTemplate).convertAndSend(eq("order.exchange"), eq("order.failed"), failedEventCaptor.capture());
+
+        OrderFailedEvent capturedFailedEvent = failedEventCaptor.getValue();
+        assertEquals(testOrderId, capturedFailedEvent.getOrderId());
+        assertEquals(testUserId, capturedFailedEvent.getUserId());
+        assertEquals("可用電量不足", capturedFailedEvent.getReason());
+        assertEquals("INSUFFICIENT_AMOUNT", capturedFailedEvent.getFailureType());
+        assertNotNull(capturedFailedEvent.getFailedAt());
+
+        // 驗證沒有發送 OrderCreatedEvent
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), eq("order.created"), any(OrderCreatedEvent.class));
+        
+        // 驗證沒有保存錢包（因為沒有鎖定資產）
+        verify(walletRepository, never()).save(any(WalletEntity.class));
     }
 
   
