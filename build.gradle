@@ -56,3 +56,27 @@ dependencyManagement {
         mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
     }
 }
+
+// 自定義任務：啟動所有服務
+task startAllServices {
+    group = 'application'
+    description = '啟動所有微服務 (order, wallet, matchEngine)'
+    
+    doLast {
+        println "正在啟動所有服務..."
+        println "使用 Ctrl+C 停止所有服務"
+    }
+}
+
+// 並行啟動所有服務
+startAllServices.dependsOn(
+    ':eap-order:bootRun',
+    ':eap-wallet:bootRun', 
+    ':eap-matchEngine:bootRun'
+)
+
+// 設定並行執行
+startAllServices.configure {
+    gradle.startParameter.parallelProjectExecutionEnabled = true
+    gradle.startParameter.maxWorkerCount = 3
+}

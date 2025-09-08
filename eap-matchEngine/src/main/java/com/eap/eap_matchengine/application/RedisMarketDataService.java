@@ -68,7 +68,7 @@ public class RedisMarketDataService {
                         OrderCreatedEvent order = objectMapper.readValue(orderJson, OrderCreatedEvent.class);
                         buyLevels.computeIfAbsent(order.getPrice(), price -> 
                             new PriceLevelData(price))
-                            .addOrder(order.getAmmount());
+                            .addOrder(order.getAmount());
                     }
                 }
             }
@@ -78,7 +78,7 @@ public class RedisMarketDataService {
                     .limit(depth)
                     .map(level -> OrderBookResponseDto.OrderBookLevel.builder()
                             .price(level.getPrice())
-                            .quantity(level.getQuantity())
+                            .amount(level.getQuantity())
                             .orderCount(level.getOrderCount())
                             .build())
                     .collect(Collectors.toList());
@@ -105,7 +105,7 @@ public class RedisMarketDataService {
                         OrderCreatedEvent order = objectMapper.readValue(orderJson, OrderCreatedEvent.class);
                         sellLevels.computeIfAbsent(order.getPrice(), price -> 
                             new PriceLevelData(price))
-                            .addOrder(order.getAmmount());
+                            .addOrder(order.getAmount());
                     }
                 }
             }
@@ -115,7 +115,7 @@ public class RedisMarketDataService {
                     .limit(depth)
                     .map(level -> OrderBookResponseDto.OrderBookLevel.builder()
                             .price(level.getPrice())
-                            .quantity(level.getQuantity())
+                            .amount(level.getQuantity())
                             .orderCount(level.getOrderCount())
                             .build())
                     .collect(Collectors.toList());

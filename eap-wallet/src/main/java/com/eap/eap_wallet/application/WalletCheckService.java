@@ -39,7 +39,7 @@ public class WalletCheckService {
             log.warn("找不到使用者錢包: " + event.getUserId());
             return false;
         }
-        if (event.getOrderType() == "BUY" && event.getAmmount() * event.getPrice() > wallet.getAvailableCurrency()) {
+        if (event.getOrderType() == "BUY" && event.getAmount() * event.getPrice() > wallet.getAvailableCurrency()) {
             log.warn("訂單總金額超過可用餘額: " + event.getUserId());
             return false;
         }
@@ -55,7 +55,7 @@ public class WalletCheckService {
             return false;
 
         }
-        if (event.getOrderType() == "SELL" && event.getAmmount() > wallet.getAvailableAmount()) {
+        if (event.getOrderType() == "SELL" && event.getAmount() > wallet.getAvailableAmount()) {
             log.warn("訂單總電量超過可供應電量: " + event.getUserId());
             return false;
 
@@ -67,11 +67,11 @@ public class WalletCheckService {
         WalletEntity wallet = walletRepository.findByUserId(event.getUserId());
 
         if ("BUY".equals(event.getOrderType())) {
-            int lockCurrency = event.getPrice() * event.getAmmount();
+            int lockCurrency = event.getPrice() * event.getAmount();
             wallet.setAvailableCurrency(wallet.getAvailableCurrency() - lockCurrency);
             wallet.setLockedCurrency(wallet.getLockedCurrency() + lockCurrency);
         } else if ("SELL".equals(event.getOrderType())) {
-            int lockAmount = event.getAmmount();
+            int lockAmount = event.getAmount();
             wallet.setAvailableAmount(wallet.getAvailableAmount() - lockAmount);
             wallet.setLockedAmount(wallet.getLockedAmount() + lockAmount);
         }

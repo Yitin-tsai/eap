@@ -17,7 +17,7 @@ public class OrderCreatedEvent {
     private UUID orderId;
     private UUID userId;
     private Integer price;
-    private Integer ammount;
+    private Integer amount;  // 修正拼寫錯誤
     private String orderType;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")

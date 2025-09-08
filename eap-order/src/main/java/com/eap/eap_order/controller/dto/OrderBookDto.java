@@ -42,7 +42,7 @@ public class OrderBookDto {
         /**
          * 該價格的總數量
          */
-        private Integer quantity;
+        private Integer amount;
         
         /**
          * 該價格的訂單數量

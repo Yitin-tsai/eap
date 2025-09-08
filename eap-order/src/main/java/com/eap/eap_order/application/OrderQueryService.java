@@ -144,7 +144,7 @@ public class OrderQueryService {
         return ListUserOrderRes.UserOrder.builder()
             .orderId(event.getOrderId() != null ? event.getOrderId().toString() : "")
             .price(event.getPrice())
-            .amount(event.getAmmount()) // 注意：原始事件中是 ammount（拼寫錯誤）
+            .amount(event.getAmount()) // 修正：使用正確的 amount 欄位
             .type(event.getOrderType())
             .updateTime(event.getCreatedAt() != null ? 
                 event.getCreatedAt().format(FORMATTER) : "")

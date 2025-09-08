@@ -1,20 +1,23 @@
 package com.eap.eap_order.controller;
 
+import com.eap.common.event.OrderCancelEvent;
 import com.eap.eap_order.application.OrderQueryService;
 import com.eap.eap_order.application.PlaceBuyOrderService;
 import com.eap.eap_order.application.PlaceSellOrderService;
+import com.eap.eap_order.application.OutBound.EapMatchEngine;
+import com.eap.eap_order.controller.dto.req.CancelOrderReq;
 import com.eap.eap_order.controller.dto.req.PlaceBuyOrderReq;
 import com.eap.eap_order.controller.dto.req.PlaceSellOrderReq;
-import com.eap.eap_order.controller.dto.res.ListBuyOrderRes;
-import com.eap.eap_order.controller.dto.res.ListSellOrderRes;
+
 import com.eap.eap_order.controller.dto.res.ListUserOrderRes;
-import com.eap.eap_order.controller.dto.res.MatchHistoryRes;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +41,8 @@ public class OrderController {
     protected PlaceSellOrderService placeSellOrderService;
     @Autowired
     protected OrderQueryService orderQueryService;
+    @Autowired
+    private  EapMatchEngine eapMatchEngine;
 
     @Operation(operationId = "post-bid-add", summary = "掛買單", description = "掛單功能 - 買入訂單")
     @ApiResponse(responseCode = "200", description = "掛單成功")
@@ -116,6 +121,20 @@ public class OrderController {
 
         ListUserOrderRes response = orderQueryService.getUserMatchedOrders(idToken);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(operationId = "cancel-order", summary = "取消訂單", description = "用戶取消未完成的訂單")
+    @ApiResponse(responseCode = "200", description = "取消成功")
+    @ApiResponse(responseCode = "400", description = "請求錯誤")
+    @PostMapping("/user-orders/cancel")
+    public ResponseEntity<Void> cancelOrder(
+            
+            @Parameter(description = "取消訂單請求") @Valid @RequestBody CancelOrderReq request) {
+
+        log.info("取消訂單請求: {}", request);
+
+       eapMatchEngine.cancelOrder(OrderCancelEvent.builder().orderId(request.getOrderId()).build());
+      return ResponseEntity.ok().build();
     }
 
 }

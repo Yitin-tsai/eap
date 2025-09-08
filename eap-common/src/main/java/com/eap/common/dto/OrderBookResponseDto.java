@@ -1,7 +1,9 @@
 package com.eap.common.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -11,6 +13,8 @@ import java.util.List;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderBookResponseDto {
     
     /**
@@ -25,6 +29,8 @@ public class OrderBookResponseDto {
     
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class OrderBookLevel {
         /**
          * 價格
@@ -34,7 +40,7 @@ public class OrderBookResponseDto {
         /**
          * 該價格的總數量
          */
-        private Integer quantity;
+        private Integer amount;
         
         /**
          * 該價格的訂單數量

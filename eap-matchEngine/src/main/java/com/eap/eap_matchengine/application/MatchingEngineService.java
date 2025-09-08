@@ -41,7 +41,7 @@ public class MatchingEngineService {
    */
   public void tryMatch(OrderCreatedEvent incomingOrder) {
     boolean isBuy = incomingOrder.getOrderType().equalsIgnoreCase("BUY");
-    while (incomingOrder.getAmmount() > 0) {
+    while (incomingOrder.getAmount() > 0) {
       OrderCreatedEvent matchOrder = orderBookService.getAndRemoveBestMatchOrderLua(isBuy, incomingOrder.getPrice());
       if (matchOrder == null) {
         // 沒有可撮合對手單，將剩餘訂單加回 orderbook
@@ -53,9 +53,9 @@ public class MatchingEngineService {
         }
         break;
       }
-      int matchedAmount = Math.min(incomingOrder.getAmmount(), matchOrder.getAmmount());
-      incomingOrder.setAmmount(incomingOrder.getAmmount() - matchedAmount);
-      matchOrder.setAmmount(matchOrder.getAmmount() - matchedAmount);
+      int matchedAmount = Math.min(incomingOrder.getAmount(), matchOrder.getAmount());
+      incomingOrder.setAmount(incomingOrder.getAmount() - matchedAmount);
+      matchOrder.setAmount(matchOrder.getAmount() - matchedAmount);
       OrderMatchedEvent matchedEvent = OrderMatchedEvent.builder()
           .buyerId(isBuy ? incomingOrder.getUserId() : matchOrder.getUserId())
           .sellerId(isBuy ? matchOrder.getUserId() : incomingOrder.getUserId())
@@ -68,7 +68,7 @@ public class MatchingEngineService {
           .build();
       rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_MATCHED_KEY, matchedEvent);
       rabbitTemplate.convertAndSend(ORDER_EXCHANGE, WALLET_MATCHED_KEY, matchedEvent);
-      if (matchOrder.getAmmount() > 0) {
+      if (matchOrder.getAmount() > 0) {
         // 對手單部分成交，剩餘部分加回 orderbook
         try {
           orderBookService.addOrder(matchOrder);

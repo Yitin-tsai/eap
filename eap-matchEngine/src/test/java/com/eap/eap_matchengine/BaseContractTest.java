@@ -52,7 +52,7 @@ public class BaseContractTest {
                 .orderId(UUID.fromString("e052f2bb-8bb9-4f0f-9c0c-385a2b16c50b"))
                 .userId(UUID.fromString("456f2bb8-8bb9-4f0f-9c0c-385a2b16c50b"))
                 .price(100)
-                .ammount(10)
+                .amount(10)
                 .orderType("BUY")
                 .createdAt(LocalDateTime.parse("2025-07-18T09:59:00"))
                 .build();
@@ -72,7 +72,7 @@ public class BaseContractTest {
                 .orderId(UUID.fromString("e052f2bb-8bb9-4f0f-9c0c-385a2b16c50a"))
                 .userId(UUID.fromString("123f2bb8-8bb9-4f0f-9c0c-385a2b16c50a"))
                 .price(100)
-                .ammount(10)
+                .amount(10)
                 .orderType("SELL")
                 .createdAt(LocalDateTime.parse("2025-07-18T10:00:00"))
                 .build();

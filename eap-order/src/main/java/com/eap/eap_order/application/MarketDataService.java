@@ -152,7 +152,7 @@ public class MarketDataService {
                 List<OrderBookDto.OrderBookLevel> bids = orderBookResponse.getBids().stream()
                         .map(level -> OrderBookDto.OrderBookLevel.builder()
                                 .price(level.getPrice())
-                                .quantity(level.getQuantity())
+                                .amount(level.getAmount())
                                 .orderCount(level.getOrderCount())
                                 .build())
                         .toList();
@@ -160,7 +160,7 @@ public class MarketDataService {
                 List<OrderBookDto.OrderBookLevel> asks = orderBookResponse.getAsks().stream()
                         .map(level -> OrderBookDto.OrderBookLevel.builder()
                                 .price(level.getPrice())
-                                .quantity(level.getQuantity())
+                                .amount(level.getAmount())
                                 .orderCount(level.getOrderCount())
                                 .build())
                         .toList();

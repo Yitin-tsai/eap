@@ -48,7 +48,7 @@ public class CreateOrderListener {
                 .orderId(event.getOrderId())
                 .userId(event.getUserId())
                 .price(event.getPrice())
-                .ammount(event.getAmount())
+                .amount(event.getAmount())
                 .orderType(event.getOrderType())
                 .createdAt(event.getCreatedAt())
                 .build();
