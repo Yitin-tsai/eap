@@ -1,0 +1,74 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: eap-mcp
+  
+  # Redis configuration for rate limiting and caching
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 2  # Use different database from order service
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# External service configurations
+eap:
+  order-service:
+    base-url: http://localhost:8080
+    timeout: 5000ms
+  
+  match-engine:
+    base-url: http://localhost:8082
+    timeout: 5000ms
+
+# MCP Server configuration
+mcp:
+  server:
+    name: "EAP Trading MCP Server"
+    version: "1.0.0"
+    description: "Model Context Protocol Server for EAP Electricity Trading Platform"
+    max-connections: 100
+    timeout: 30s
+  
+  # Rate limiting configuration
+  rate-limit:
+    enabled: true
+    requests-per-minute: 60
+    burst-capacity: 10
+  
+  # Audit configuration
+  audit:
+    enabled: true
+    log-level: INFO
+    include-request-body: true
+    include-response-body: false
+
+# Logging configuration
+logging:
+  level:
+    com.eap.mcp: DEBUG
+    org.springframework.ai: DEBUG
+    feign: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true

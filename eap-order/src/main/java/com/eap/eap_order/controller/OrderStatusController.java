@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
-@RequestMapping("/bid")
+@RequestMapping("/orders")
 @Slf4j
 public class OrderStatusController {
 
