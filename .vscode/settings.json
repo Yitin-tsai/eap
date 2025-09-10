@@ -5,5 +5,7 @@
   "java.import.gradle.wrapper.enabled": true,
   "java.import.gradle.java.home": "/path/to/your/java17", // 可選
   "java.project.referencedLibraries": [
-    "lib/**/*.jar"]
+    "lib/**/*.jar"
+  ],
+  "kiroAgent.configureMCP": "Disabled"
 }

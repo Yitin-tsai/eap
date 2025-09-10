@@ -18,6 +18,17 @@ spring:
           max-idle: 8
           min-idle: 0
 
+  # Spring AI MCP configuration
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: "EAP Trading MCP Server"
+        version: "1.0.0"
+        description: "Model Context Protocol server for EAP electricity trading platform"
+        transport-type: sse  # 使用 SSE 傳輸
+        base-path: "/mcp"
+
 # External service configurations
 eap:
   order-service:
@@ -36,6 +47,11 @@ mcp:
     description: "Model Context Protocol Server for EAP Electricity Trading Platform"
     max-connections: 100
     timeout: 30s
+    # MCP 協議端點
+    endpoints:
+      base-path: "/mcp"
+      sse-path: "/sse"
+      websocket-path: "/ws"
   
   # Rate limiting configuration
   rate-limit:
