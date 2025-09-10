@@ -3,6 +3,7 @@
 *.jar
 *.war
 *.ear
+.gitignore
 
 # Gradle
 .gradle/
@@ -12,6 +13,7 @@ build/
 !settings.gradle
 !gradlew
 !gradlew.bat
+gradle
 
 # IDE
 .idea/
@@ -26,6 +28,7 @@ build/
 *.orig
 *.rej
 .DS_Store
+.vscode/
 
 # OS
 Thumbs.db

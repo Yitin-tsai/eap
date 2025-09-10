@@ -1,12 +1,13 @@
 package com.eap.mcp.client;
 
+import com.eap.common.dto.UserRegistrationResponse;
+import com.eap.common.dto.WalletStatusResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -77,62 +78,5 @@ public class WalletServiceClient {
             log.error("檢查用戶存在性失敗: userId={}", userId, e);
             return false;
         }
-    }
-
-    // DTO 類
-    public static class UserRegistrationResponse {
-        private UUID userId;
-        private String message;
-        private boolean success;
-
-        // Getters and Setters
-        public UUID getUserId() { return userId; }
-        public void setUserId(UUID userId) { this.userId = userId; }
-        
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        
-        public boolean isSuccess() { return success; }
-        public void setSuccess(boolean success) { this.success = success; }
-    }
-
-    public static class WalletStatusResponse {
-        private UUID userId;
-        private Integer availableAmount;
-        private Integer lockedAmount;
-        private Integer availableCurrency;
-        private Integer lockedCurrency;
-        private String createdAt;
-        private String updatedAt;
-        private boolean success;
-        private String message;
-
-        // Getters and Setters
-        public UUID getUserId() { return userId; }
-        public void setUserId(UUID userId) { this.userId = userId; }
-        
-        public Integer getAvailableAmount() { return availableAmount; }
-        public void setAvailableAmount(Integer availableAmount) { this.availableAmount = availableAmount; }
-        
-        public Integer getLockedAmount() { return lockedAmount; }
-        public void setLockedAmount(Integer lockedAmount) { this.lockedAmount = lockedAmount; }
-        
-        public Integer getAvailableCurrency() { return availableCurrency; }
-        public void setAvailableCurrency(Integer availableCurrency) { this.availableCurrency = availableCurrency; }
-        
-        public Integer getLockedCurrency() { return lockedCurrency; }
-        public void setLockedCurrency(Integer lockedCurrency) { this.lockedCurrency = lockedCurrency; }
-        
-        public String getCreatedAt() { return createdAt; }
-        public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
-        
-        public String getUpdatedAt() { return updatedAt; }
-        public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
-        
-        public boolean isSuccess() { return success; }
-        public void setSuccess(boolean success) { this.success = success; }
-        
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
     }
 }

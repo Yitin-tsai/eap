@@ -1,10 +1,10 @@
 package com.eap.eap_wallet.controller;
 
 import com.eap.common.event.OrderCreatedEvent;
+import com.eap.common.dto.UserRegistrationResponse;
+import com.eap.common.dto.WalletStatusResponse;
 import com.eap.eap_wallet.application.UserRegistrationService;
 import com.eap.eap_wallet.application.WalletCheckService;
-import com.eap.eap_wallet.domain.dto.UserRegistrationResponse;
-import com.eap.eap_wallet.domain.dto.WalletStatusResponse;
 import com.eap.eap_wallet.domain.entity.WalletEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,11 +58,18 @@ public class WalletController {
             WalletEntity wallet = userRegistrationService.getWalletByUserId(userId);
             
             if (wallet == null) {
-                WalletStatusResponse response = WalletStatusResponse.notFound(userId);
                 return ResponseEntity.notFound().build();
             }
             
-            WalletStatusResponse response = WalletStatusResponse.fromEntity(wallet);
+            WalletStatusResponse response = WalletStatusResponse.success(
+                wallet.getUserId(),
+                wallet.getAvailableAmount(),
+                wallet.getLockedAmount(),
+                wallet.getAvailableCurrency(),
+                wallet.getLockedCurrency(),
+                null, // createdAt 不存在
+                wallet.getUpdateTime()
+            );
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {

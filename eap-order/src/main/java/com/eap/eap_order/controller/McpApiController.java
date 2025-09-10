@@ -1,8 +1,7 @@
 package com.eap.eap_order.controller;
 
 import com.eap.common.event.OrderCancelEvent;
-import com.eap.common.dto.OrderBookResponseDto;
-import com.eap.common.dto.MarketSummaryDto;
+import com.eap.common.dto.*;
 import com.eap.eap_order.application.OrderQueryService;
 import com.eap.eap_order.application.PlaceBuyOrderService;
 import com.eap.eap_order.application.PlaceSellOrderService;
@@ -29,6 +28,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * MCP API Controller
@@ -37,7 +39,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/mcp/v1")
 @Validated
-@Tag(name = "MCP API", description = "Model Context Protocol API for EAP Trading Platform")
+@Tag(name = "MCP API", description = "Model Context Protocol API for LLM Integration")
 @Slf4j
 public class McpApiController {
 
@@ -60,49 +62,55 @@ public class McpApiController {
     @Operation(summary = "統一下單", description = "支援買賣雙向的統一下單接口")
     @ApiResponse(responseCode = "200", description = "下單成功")
     @PostMapping("/orders")
-    public ResponseEntity<Map<String, Object>> placeOrder(
-            @Valid @RequestBody Map<String, Object> request) {
+    public ResponseEntity<PlaceOrderResponse> placeOrder(
+            @Valid @RequestBody PlaceOrderRequest request) {
         
         log.info("收到 MCP 下單請求: {}", request);
         
-        Map<String, Object> response = new HashMap<>();
-        
-        // 解析請求參數
-        String side = (String) request.get("side");
-        BigDecimal price = new BigDecimal(request.get("price").toString());
-        BigDecimal qty = new BigDecimal(request.get("qty").toString());
-        String userId = (String) request.get("userId");
-
-        UUID orderId;
-        if ("BUY".equalsIgnoreCase(side)) {
-            PlaceBuyOrderReq buyReq = PlaceBuyOrderReq.builder()
-                .bidPrice(price.intValue())
-                .amount(qty.intValue())
-                .bidder(UUID.fromString(userId))
-                .build();
-            orderId = placeBuyOrderService.execute(buyReq);
-        } else if ("SELL".equalsIgnoreCase(side)) {
-            PlaceSellOrderReq sellReq = new PlaceSellOrderReq();
-            sellReq.setSellPrice(price.intValue());
-            sellReq.setAmount(qty.intValue());
-            sellReq.setSeller(UUID.fromString(userId));
-            placeSellOrderService.placeSellOrder(sellReq);
-            orderId = UUID.randomUUID(); // 暫時生成，實際應該從服務返回
-        } else {
-            throw new IllegalArgumentException("Invalid side: " + side);
+        // 驗證請求
+        if (!request.isValid()) {
+            String error = request.getValidationError();
+            log.warn("下單請求驗證失敗: {}", error);
+            return ResponseEntity.badRequest().body(PlaceOrderResponse.failure(error));
         }
 
-        // 構建響應
-        response.put("orderId", orderId.toString());
-        response.put("status", "PENDING");
-        response.put("acceptedAt", LocalDateTime.now());
-        response.put("side", side);
-        response.put("type", request.get("type"));
-        response.put("price", price);
-        response.put("qty", qty);
-        response.put("symbol", request.get("symbol"));
+        try {
+            UUID orderId;
+            if (request.isBuy()) {
+                PlaceBuyOrderReq buyReq = PlaceBuyOrderReq.builder()
+                    .bidPrice(request.getPriceAsInt())
+                    .amount(request.getQtyAsInt())
+                    .bidder(UUID.fromString(request.getUserId()))
+                    .build();
+                orderId = placeBuyOrderService.execute(buyReq);
+            } else if (request.isSell()) {
+                PlaceSellOrderReq sellReq = new PlaceSellOrderReq();
+                sellReq.setSellPrice(request.getPriceAsInt());
+                sellReq.setAmount(request.getQtyAsInt());
+                sellReq.setSeller(UUID.fromString(request.getUserId()));
+                placeSellOrderService.placeSellOrder(sellReq);
+                orderId = UUID.randomUUID(); // 暫時生成，實際應該從服務返回
+            } else {
+                return ResponseEntity.badRequest().body(
+                    PlaceOrderResponse.failure("Invalid side: " + request.getSide()));
+            }
 
-        return ResponseEntity.ok(response);
+            PlaceOrderResponse response = PlaceOrderResponse.success(
+                orderId.toString(), 
+                request.getSide(), 
+                request.getType(), 
+                request.getPrice(), 
+                request.getQty(), 
+                request.getSymbol()
+            );
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("下單失敗", e);
+            return ResponseEntity.internalServerError().body(
+                PlaceOrderResponse.failure("下單失敗: " + e.getMessage()));
+        }
     }
 
     /**
@@ -112,12 +120,10 @@ public class McpApiController {
     @Operation(summary = "取消訂單", description = "根據訂單ID取消訂單")
     @ApiResponse(responseCode = "200", description = "取消成功")
     @DeleteMapping("/orders/{orderId}")
-    public ResponseEntity<Map<String, Object>> cancelOrder(
+    public ResponseEntity<CancelOrderResponse> cancelOrder(
             @Parameter(description = "訂單ID") @PathVariable String orderId) {
         
         log.info("收到 MCP 取消訂單請求: {}", orderId);
-        
-        Map<String, Object> response = new HashMap<>();
         
         try {
             // 構建取消事件
@@ -128,17 +134,13 @@ public class McpApiController {
             // 調用取消服務
             eapMatchEngine.cancelOrder(cancelEvent);
             
-            response.put("orderId", orderId);
-            response.put("status", "CANCELLED");
-            response.put("cancelledAt", LocalDateTime.now());
+            return ResponseEntity.ok(CancelOrderResponse.success(orderId));
             
         } catch (Exception e) {
             log.error("取消訂單失敗: {}", e.getMessage());
-            response.put("error", "取消訂單失敗: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(
+                CancelOrderResponse.failure(orderId, "取消訂單失敗: " + e.getMessage()));
         }
-
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -148,13 +150,11 @@ public class McpApiController {
     @Operation(summary = "查詢用戶訂單", description = "根據用戶ID查詢訂單列表")
     @ApiResponse(responseCode = "200", description = "查詢成功")
     @GetMapping("/orders")
-    public ResponseEntity<Map<String, Object>> getUserOrders(
+    public ResponseEntity<UserOrdersResponse> getUserOrders(
             @Parameter(description = "用戶ID") @RequestParam String userId,
             @Parameter(description = "訂單狀態", required = false) @RequestParam(required = false) String status) {
         
         log.info("收到 MCP 查詢用戶訂單請求: userId={}, status={}", userId, status);
-        
-        Map<String, Object> response = new HashMap<>();
         
         try {
             ListUserOrderRes orders;
@@ -166,19 +166,14 @@ public class McpApiController {
                 orders = orderQueryService.getUserOrderList(userId);
             }
             
-            response.put("userId", userId);
-            response.put("orders", orders.getUserOrders());
-            response.put("totalCount", orders.getUserOrders().size());
-            response.put("status", status != null ? status : "all");
-            response.put("timestamp", LocalDateTime.now());
+            return ResponseEntity.ok(UserOrdersResponse.success(userId, 
+                orders.getUserOrders().stream().map(order -> (Object) order).toList(), status));
             
         } catch (Exception e) {
             log.error("查詢用戶訂單失敗: {}", e.getMessage());
-            response.put("error", "查詢失敗: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(
+                UserOrdersResponse.failure(userId, "查詢失敗: " + e.getMessage()));
         }
-
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -188,27 +183,38 @@ public class McpApiController {
     @Operation(summary = "獲取訂單簿", description = "獲取當前市場訂單簿數據")
     @ApiResponse(responseCode = "200", description = "獲取成功")
     @GetMapping("/orderbook")
-    public ResponseEntity<Map<String, Object>> getOrderBook(
+    public ResponseEntity<OrderBookResponseDto> getOrderBook(
             @Parameter(description = "深度") @RequestParam(defaultValue = "10") int depth) {
         
         log.info("收到 MCP 獲取訂單簿請求: depth={}", depth);
         
-        Map<String, Object> response = new HashMap<>();
-        
         try {
-            ResponseEntity<OrderBookResponseDto> orderBook = eapMatchEngine.getOrderBook(depth);
+            // 限制最大深度以避免過大的響應
+            int depthN = Math.min(depth, 20);
             
-            response.put("success", true);
-            response.put("timestamp", LocalDateTime.now());
-            response.put("orderBook", orderBook.getBody());
+            // 直接從 MatchEngine 獲取訂單簿數據
+            ResponseEntity<OrderBookResponseDto> orderBook = eapMatchEngine.getOrderBook(depthN);
+            
+            if (orderBook.getStatusCode().is2xxSuccessful() && orderBook.getBody() != null) {
+                return ResponseEntity.ok(orderBook.getBody());
+            } else {
+                // 如果無法獲取數據，返回空的訂單簿
+                OrderBookResponseDto emptyOrderBook = OrderBookResponseDto.builder()
+                    .bids(new ArrayList<>())
+                    .asks(new ArrayList<>())
+                    .build();
+                return ResponseEntity.ok(emptyOrderBook);
+            }
             
         } catch (Exception e) {
-            log.error("獲取訂單簿失敗: {}", e.getMessage());
-            response.put("error", "獲取訂單簿失敗: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            log.error("獲取訂單簿失敗", e);
+            // 返回空的訂單簿而不是錯誤
+            OrderBookResponseDto emptyOrderBook = OrderBookResponseDto.builder()
+                .bids(new ArrayList<>())
+                .asks(new ArrayList<>())
+                .build();
+            return ResponseEntity.ok(emptyOrderBook);
         }
-
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -218,32 +224,26 @@ public class McpApiController {
     @Operation(summary = "獲取市場指標", description = "獲取詳細的市場分析指標")
     @ApiResponse(responseCode = "200", description = "獲取成功")
     @GetMapping("/metrics")
-    public ResponseEntity<Map<String, Object>> getMarketMetrics(
+    public ResponseEntity<MarketMetricsResponse> getMarketMetrics(
             @Parameter(description = "訂單簿深度") @RequestParam(defaultValue = "10") int depth) {
         
         log.info("收到 MCP 獲取市場指標請求: depth={}", depth);
         
-        Map<String, Object> response = new HashMap<>();
-        
         try {
             // 獲取市場摘要
             ResponseEntity<MarketSummaryDto> marketSummary = eapMatchEngine.getMarketSummary();
-            response.put("marketSummary", marketSummary.getBody());
             
             // 獲取訂單簿進行深度分析
             int depthN = Math.min(depth, 20); // 限制最大深度
             ResponseEntity<OrderBookResponseDto> orderBook = eapMatchEngine.getOrderBook(depthN);
-            response.put("orderBook", orderBook.getBody());
+            
+            Map<String, Object> metrics = new HashMap<>();
             
             if (orderBook.getBody() != null) {
                 OrderBookResponseDto orderBookData = orderBook.getBody();
                 
                 // 計算額外的市場指標
-                Map<String, Object> metrics = new HashMap<>();
-                
-                // 買賣價差
-                if (orderBookData != null && 
-                    orderBookData.getBids() != null && !orderBookData.getBids().isEmpty() && 
+                if (orderBookData.getBids() != null && !orderBookData.getBids().isEmpty() && 
                     orderBookData.getAsks() != null && !orderBookData.getAsks().isEmpty()) {
                     BigDecimal bestBid = BigDecimal.valueOf(orderBookData.getBids().get(0).getPrice());
                     BigDecimal bestAsk = BigDecimal.valueOf(orderBookData.getAsks().get(0).getPrice());
@@ -267,20 +267,19 @@ public class McpApiController {
                     metrics.put("askLiquidity", askLiquidity);
                     metrics.put("totalLiquidity", bidLiquidity + askLiquidity);
                 }
-                
-                response.put("metrics", metrics);
-                response.put("orderBookDepth", depthN);
             }
             
-            response.put("timestamp", LocalDateTime.now());
+            return ResponseEntity.ok(MarketMetricsResponse.success(
+                marketSummary.getBody(), 
+                orderBook.getBody(), 
+                metrics, 
+                depthN));
             
         } catch (Exception e) {
             log.error("獲取市場指標失敗: {}", e.getMessage());
-            response.put("error", "獲取市場指標失敗: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(
+                MarketMetricsResponse.failure("獲取市場指標失敗: " + e.getMessage()));
         }
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -290,12 +289,7 @@ public class McpApiController {
     @Operation(summary = "健康檢查", description = "檢查 MCP API 服務狀態")
     @ApiResponse(responseCode = "200", description = "服務正常")
     @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> health() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "UP");
-        response.put("timestamp", LocalDateTime.now());
-        response.put("service", "mcp-api");
-        response.put("version", "1.0.0");
+    public ResponseEntity<HealthResponse> health() {
         
         // 檢查依賴服務狀態
         Map<String, String> dependencies = new HashMap<>();
@@ -304,7 +298,8 @@ public class McpApiController {
         dependencies.put("orderQueryService", "UP");
         dependencies.put("eapMatchEngine", "UP");
         
-        response.put("dependencies", dependencies);
+        HealthResponse response = HealthResponse.up("mcp-api", "1.0.0");
+        response.setDependencies(dependencies);
         
         return ResponseEntity.ok(response);
     }
