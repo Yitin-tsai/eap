@@ -32,12 +32,13 @@ spring:
 # External service configurations
 eap:
   order-service:
-    base-url: http://localhost:8080
-    timeout: 5000ms
+    base-url: http://localhost:8080/eap-order
+  
+  wallet:
+    base-url: http://localhost:8081/eap-wallet
   
   match-engine:
-    base-url: http://localhost:8082
-    timeout: 5000ms
+    base-url: http://localhost:8082/match-engine
 
 # MCP Server configuration
 mcp:

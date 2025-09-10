@@ -16,25 +16,25 @@ public interface OrderServiceClient {
     /**
      * 健康檢查
      */
-    @GetMapping("/eap-order/mcp/v1/health")
+    @GetMapping("/mcp/v1/health")
     ResponseEntity<Map<String, Object>> health();
 
     /**
      * 統一下單
      */
-    @PostMapping("/eap-order/mcp/v1/orders")
+    @PostMapping("/mcp/v1/orders")
     ResponseEntity<Map<String, Object>> placeOrder(@RequestBody Map<String, Object> orderRequest);
 
     /**
      * 取消訂單
      */
-    @DeleteMapping("/eap-order/mcp/v1/orders/{orderId}")
+    @DeleteMapping("/mcp/v1/orders/{orderId}")
     ResponseEntity<Map<String, Object>> cancelOrder(@PathVariable String orderId);
 
     /**
      * 查詢用戶訂單
      */
-    @GetMapping("/eap-order/mcp/v1/orders")
+    @GetMapping("/mcp/v1/orders")
     ResponseEntity<Map<String, Object>> getUserOrders(
             @RequestParam String userId,
             @RequestParam(required = false) String status);
@@ -42,12 +42,12 @@ public interface OrderServiceClient {
     /**
      * 獲取訂單簿
      */
-    @GetMapping("/eap-order/mcp/v1/orderbook")
+    @GetMapping("/mcp/v1/orderbook")
     ResponseEntity<Map<String, Object>> getOrderBook(@RequestParam(defaultValue = "10") int depth);
 
     /**
      * 獲取市場指標
      */
-    @GetMapping("/eap-order/mcp/v1/metrics")
+    @GetMapping("/mcp/v1/metrics")
     ResponseEntity<Map<String, Object>> getMarketMetrics(@RequestParam(defaultValue = "10") int depth);
 }

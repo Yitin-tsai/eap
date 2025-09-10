@@ -3,6 +3,7 @@ package com.eap.mcp.config;
 import com.eap.mcp.tools.mcp.MarketMetricsMcpTool;
 import com.eap.mcp.tools.mcp.OrderBookMcpTool;
 import com.eap.mcp.tools.mcp.TradingMcpTool;
+import com.eap.mcp.tools.mcp.UserManagementMcpTool;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.context.annotation.Bean;
@@ -19,11 +20,12 @@ public class McpToolConfig {
     public ToolCallbackProvider mcpTools(
             MarketMetricsMcpTool metrics,
             OrderBookMcpTool orderBook,
-            TradingMcpTool trading) {
+            TradingMcpTool trading,
+            UserManagementMcpTool userManagement) {
 
         return MethodToolCallbackProvider
                 .builder()
-                .toolObjects(metrics, orderBook, trading)
+                .toolObjects(metrics, orderBook, trading, userManagement)
                 .build();
     }
 }
