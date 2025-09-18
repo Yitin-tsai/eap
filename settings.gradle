@@ -5,6 +5,7 @@ include 'eap-matchEngine'
 include 'eap-order'
 include 'eap-wallet'
 include 'eap-mcp'
+include 'eap-ai-client'
 
 // 確保每個專案都可以使用 eap-common
 project(':eap-matchEngine').projectDir = file('eap-matchEngine')
@@ -12,3 +13,4 @@ project(':eap-order').projectDir = file('eap-order')
 project(':eap-wallet').projectDir = file('eap-wallet')
 project(':eap-common').projectDir = file('eap-common')
 project(':eap-mcp').projectDir = file('eap-mcp')
+project(':eap-ai-client').projectDir = file('eap-ai-client')

@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: eap-mcp
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
   
   # Redis configuration for rate limiting and caching
   data:
@@ -73,6 +77,7 @@ logging:
     com.eap.mcp: DEBUG
     org.springframework.ai: DEBUG
     feign: DEBUG
+    io.modelcontextprotocol: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"
 
