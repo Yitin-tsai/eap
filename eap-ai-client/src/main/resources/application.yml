@@ -20,8 +20,9 @@ spring:
 eap:
   mcp:
     base-url: http://localhost:8083
-    base-path: /mcp
-    sse-path: /sse
+    base-path: ""          # 策略1 沒有 base 前綴就留空
+    sse-path: /mcp/sse
+    message-path: /mcp/message
     timeout-seconds: 60
 
 logging:

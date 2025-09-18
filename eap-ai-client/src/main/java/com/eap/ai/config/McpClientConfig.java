@@ -8,72 +8,42 @@ import io.modelcontextprotocol.spec.McpSchema;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import java.time.Duration;
 
-/**
- * 建立使用 SSE 傳輸的 MCP 同步客戶端。
- */
-@Configuration
+@Configuration  
 public class McpClientConfig {
 
+    @Value("${eap.mcp.base-url:http://localhost:8083}")
+    private String baseUrl;
+    
+    @Value("${eap.mcp.sse-path:/mcp/sse}")
+    private String ssePath;
+    
+    @Value("${eap.mcp.message-path:/mcp/message}")
+    private String messagePath;
+    
+    @Value("${eap.mcp.timeout-seconds:60}")
+    private int timeoutSeconds;
+
     @Bean(destroyMethod = "close")
-    public McpSyncClient mcpSyncClient(
-        @Value("${eap.mcp.base-url:http://localhost:8083}") String baseUrl,
-        @Value("${eap.mcp.base-path:/mcp}") String basePath,
-        @Value("${eap.mcp.sse-path:/sse}") String ssePath,
-        @Value("${eap.mcp.timeout-seconds:30}") long timeoutSeconds,
-        ObjectMapper objectMapper
-    ) {
-        Duration timeout = Duration.ofSeconds(timeoutSeconds);
+    public McpSyncClient mcpSyncClient(ObjectMapper objectMapper) {
+        String sseUrl = baseUrl + ssePath;
+        String msgUrl = baseUrl + messagePath;
+        
+        System.out.println("=== MCP Client Configuration ===");
+        System.out.println("SSE URL: " + sseUrl);
+        System.out.println("Message URL: " + msgUrl);
+        System.out.println("================================");
 
-        String finalBaseUri = trimTrailingSlash(baseUrl);
-        String sseEndpoint = joinPaths(basePath, ssePath);
-
-        HttpClientSseClientTransport transport = HttpClientSseClientTransport.builder(finalBaseUri)
-            .sseEndpoint(sseEndpoint)
-            .objectMapper(objectMapper)
-            .connectTimeout(timeout)
+        var transport = HttpClientSseClientTransport.builder(baseUrl)
+            .sseEndpoint(ssePath)
+            .connectTimeout(Duration.ofSeconds(timeoutSeconds))
             .build();
-
+            
         return McpClient.sync(transport)
-            .requestTimeout(timeout)
-            .initializationTimeout(timeout)
+            .requestTimeout(Duration.ofSeconds(timeoutSeconds))
+            .initializationTimeout(Duration.ofSeconds(timeoutSeconds))
             .clientInfo(new McpSchema.Implementation("EAP AI Client", "0.1.0"))
             .build();
     }
-
-    private static String trimTrailingSlash(String value) {
-        if (value == null || value.isEmpty()) {
-            return "";
-        }
-        return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
-    }
-
-    private static String normalizePath(String path) {
-        if (path == null || path.isBlank()) {
-            return "/";
-        }
-        String normalized = path.trim();
-        if (!normalized.startsWith("/")) {
-            normalized = "/" + normalized;
-        }
-        if (normalized.endsWith("/") && normalized.length() > 1) {
-            normalized = normalized.substring(0, normalized.length() - 1);
-        }
-        return normalized;
-    }
-
-    private static String joinPaths(String basePath, String subPath) {
-        String base = normalizePath(basePath);
-        String sub = normalizePath(subPath);
-        if ("/".equals(base)) {
-            return sub;
-        }
-        if ("/".equals(sub)) {
-            return base;
-        }
-        return base + sub;
-    }
-
 }

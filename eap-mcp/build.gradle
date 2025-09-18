@@ -31,8 +31,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     
-    // 正確的 MCP Server Starter
-    implementation 'org.springframework.ai:spring-ai-starter-mcp-server:1.1.0-M1'
+    // 正確的 MCP Server WebMVC Starter
+    implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc:1.1.0-M1'
     
     // HTTP Client for calling order-service
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
