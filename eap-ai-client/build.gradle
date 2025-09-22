@@ -46,6 +46,8 @@ dependencies {
     // 工具類
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    // Validation (Jakarta Bean Validation)
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     
     // 測試依賴
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

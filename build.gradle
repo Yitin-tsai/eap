@@ -72,7 +72,8 @@ task startAllServices {
 startAllServices.dependsOn(
     ':eap-order:bootRun',
     ':eap-wallet:bootRun', 
-    ':eap-matchEngine:bootRun'
+    ':eap-matchEngine:bootRun',
+    ':eap-mcp:bootRun'
 )
 
 // 設定並行執行

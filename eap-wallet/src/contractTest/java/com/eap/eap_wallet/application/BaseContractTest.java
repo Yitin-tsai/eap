@@ -1,6 +1,5 @@
 package com.eap.eap_wallet.application;
 
-
 import com.eap.eap_wallet.configuration.repository.WalletRepository;
 import com.eap.eap_wallet.domain.entity.WalletEntity;
 import com.eap.common.event.OrderCreateEvent;
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureMessageVerifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +17,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.messaging.PollableChannel;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-@SpringJUnitConfig(classes = {CreateOrderListener.class, BaseContractTest.TestConfiguration.class})
+@SpringBootTest(classes = {CreateOrderListener.class, BaseContractTest.TestConfiguration.class})
 @AutoConfigureMessageVerifier
 public class BaseContractTest {
 
@@ -58,7 +57,9 @@ public class BaseContractTest {
         WalletEntity.builder()
             .userId(testUserId)
             .availableCurrency(10000) // 確保餘額足夠（100 * 1 = 100 < 10000）
-            .lockedAmount(0)
+            .lockedCurrency(0) // 添加 lockedCurrency 初始值
+            .availableAmount(1000) // 添加 availableAmount 初始值
+            .lockedAmount(0) // 添加 lockedAmount 初始值
             .build();
 
     // 如果 findByUserId 參數是 UUID，使用 UUID；如果是 String，使用 String

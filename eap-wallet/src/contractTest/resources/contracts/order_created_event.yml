@@ -10,7 +10,7 @@ outputMessage:
     userId: "123e4567-e89b-12d3-a456-426614174000"
     price: 100
     amount: 1
-    type: "BUY"
-    createdAt: "2025-07-16T12:00:00"
+    orderType: "BUY"
+    createdAt: "2025-07-16T12:00:00.000000"
   headers:
     rabbitmq_routingKey: order.created
