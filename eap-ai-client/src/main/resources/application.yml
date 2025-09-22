@@ -28,11 +28,11 @@ eap:
 logging:
   level:
     com.eap.ai: DEBUG
-    org.springframework.ai: DEBUG
-    org.springframework.ai.ollama: DEBUG
-    org.springframework.web.reactive.function.client.ExchangeFunctions: TRACE
-    reactor.netty.http.client: DEBUG
-    reactor.netty.transport: DEBUG
+    org.springframework.ai: INFO
+    org.springframework.ai.ollama: INFO
+    org.springframework.web.reactive.function.client.ExchangeFunctions: INFO
+    reactor.netty.http.client: INFO
+    reactor.netty.transport: INFO
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 

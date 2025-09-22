@@ -48,8 +48,8 @@ public class OllamaConfig {
         HttpClient httpClient = HttpClient.create()
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) connectTimeout.toMillis())
             .responseTimeout(readTimeout)
-            // 打開 wiretap 以便觀察 HTTP chunk / TCP 細節
-            .wiretap(true)
+            // 關閉 wiretap 以避免在日誌輸出大量的 hex/tcp chunk 資訊（可根據需要改回 true 以 debug）
+            .wiretap(false)
             .doOnConnected(conn -> conn
                 .addHandlerLast(new ReadTimeoutHandler(readTimeout.toMillis(), TimeUnit.MILLISECONDS))
                 .addHandlerLast(new WriteTimeoutHandler(readTimeout.toMillis(), TimeUnit.MILLISECONDS)));

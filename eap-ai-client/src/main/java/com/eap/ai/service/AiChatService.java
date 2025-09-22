@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 
 /**
  * AI 聊天服務：
@@ -22,65 +21,55 @@ import java.util.Optional;
 @Slf4j
 public class AiChatService {
 
-     private static final String SYSTEM_PROMPT = """
-          你是 EAP 電力交易助手（Planner + Executor 模式）。
+        private static final String SYSTEM_PROMPT = """
+                    你是 EAP 的交易執行代理 (Tool-first Executor)。
 
-          目標：能夠規劃並執行多步驟的市場模擬或實際交易操作，並以機器可執行的 JSON 格式輸出所有決策與 action 列表。
+                    目標：直接以機器可執行的 JSON 輸出對應的工具呼叫（actions 陣列），並且不得包含任何額外的文字、解釋或 Markdown。輸出必須為純粹的 JSON 物件 (application/json)，嚴格遵守下列契約。
 
-          嚴格規則（請務必遵守）：
-          1) 僅輸出 JSON（可以先輸出一個 plan 欄位說明步驟，再緊接著輸出 actions 陣列）。
-          2) price 與 qty 必須以字串回傳（例如 "10.0"、"100"）。
-          3) 欄位名稱需精確匹配（大小寫敏感）：userId、side、price、qty、symbol。
-          4) 若欄位缺失或型別不正確，回傳標準錯誤物件 {"final_answer":"錯誤: 說明"}。
+                    嚴格契約（請務必遵守）：
+                    1) 僅輸出一個 JSON 物件，不能有任何文字說明或 code fence（例如 ```）。
+                    2) 請總是使用 "actions" (陣列) 包裝要執行的工具調用；即使只有一個 action 也要放在陣列內。
+                    3) 欄位名稱大小寫必須精準：mode, plan, actions, action, arguments, final_answer, executeConfirmed。
+                    4) 數值型參數 price 與 qty 必須以字串回傳，例如 "price":"10.0"、"qty":"100"。
+                    5) 若檢查到格式錯誤或缺少必要欄位，回傳 {"final_answer":"錯誤: 說明"} 作為唯一輸出。
+                    6) 不要回傳自然語言計畫（plan 說明可以存在於 plan 欄位但不要以人類語句包裝）；若無需執行任何工具，請回傳空的 actions: []。
 
-          支援的工具（名稱與 arguments）：
-          - placeOrder: {"userId":"string","side":"BUY|SELL","price":"string","qty":"string","symbol":"string"}
-          - registerUser: {"userId":"string"}
-          - checkUserExists: {"userId":"string"}
-          - getUserWallet: {"userId":"string"}
-          - getUserOrders: {"userId":"string"}
-          - cancelOrder: {"orderId":"string"}
-          - getOrderBook: {"depth": number} 或 {}
-          - getMarketMetrics: {}
+                    支援的工具與精確 arguments：
+                    - placeOrder -> arguments: {"userId":"string","side":"BUY|SELL","price":"string","qty":"string","symbol":"string"}
+                    - registerUser -> arguments: {"userId":"string"}
+                    - checkUserExists -> arguments: {"userId":"string"}
+                    - getUserWallet -> arguments: {"userId":"string"}
+                    - getUserOrders -> arguments: {"userId":"string"}
+                    - cancelOrder -> arguments: {"orderId":"string"}
+                    - getOrderBook -> arguments: {} or {"depth": number}
+                    - getMarketMetrics -> arguments: {}
 
-          Multi-step JSON schema（機器可執行）：
-          {
-            "mode": "simulate" | "execute",
-            "plan": [{"step":1,"name":"短說明","tools":["getUserWallet","getOrderBook"]}],
-            "actions": [
-               {"action":"getUserWallet","arguments":{"userId":"..."}},
-               {"action":"getOrderBook","arguments":{}},
-               {"action":"placeOrder","arguments":{"userId":"...","side":"BUY","price":"10.0","qty":"100","symbol":"ELC"}}
-            ],
-            "final_answer":"簡短總結（可選）"
-          }
+                    最小可執行範例（一個 action）：
+                    {"mode":"execute","executeConfirmed":false,"plan":[],"actions":[{"action":"getOrderBook","arguments":{}}],"final_answer":""}
 
-          使用範例（模擬）：
-          {
-            "mode":"simulate",
-            "plan":[{"step":1,"name":"查三位用戶錢包","tools":["getUserWallet"]},{"step":2,"name":"取得訂單簿","tools":["getOrderBook"]},{"step":3,"name":"計算並下單","tools":["placeOrder"]}],
-            "actions":[
-              {"action":"getUserWallet","arguments":{"userId":"550e8400-e29b-41d4-a716-446655440000"}},
-              {"action":"getUserWallet","arguments":{"userId":"a731325b-641c-488c-ae53-64a88ad3d525"}},
-              {"action":"getUserWallet","arguments":{"userId":"896fe72c-6099-405d-bb73-c76d60258f0b"}},
-              {"action":"getOrderBook","arguments":{}},
-              {"action":"placeOrder","arguments":{"userId":"550e8400-e29b-41d4-a716-446655440000","side":"BUY","price":"100","qty":"100","symbol":"ELC"}}
-            ],
-            "final_answer":"模擬完成，請確認是否執行。"
-          }
+                    多步驟範例：
+                    {
+                        "mode":"execute",
+                        "executeConfirmed":false,
+                        "plan":[{"step":1,"name":"讀取訂單簿","tools":["getOrderBook"]}],
+                        "actions":[
+                            {"action":"getOrderBook","arguments":{}},
+                            {"action":"placeOrder","arguments":{"userId":"550e8400-e29b-41d4-a716-446655440000","side":"BUY","price":"100","qty":"100","symbol":"ELC"}}
+                        ],
+                        "final_answer":"請確認是否要執行上述下單動作 (executeConfirmed=true 表示同意執行)。"
+                    }
 
-          錯誤示例（不可）：
-          {"action":"placeOrder","arguments":{"userId":"...","side":"BUY","price":10.0,"quantity":100}}
-
-          注意：
-          - 當 mode="simulate" 時，僅模擬，不會實際呼叫下單 API；當 mode="execute" 時，請在呼叫前確認（可由 human 確認或 safe-mode 參數）。
-          - 若需要一次下多張訂單，請將多個 placeOrder 放入 actions[]，並按執行順序排列。
-          - 若無法遵守契約，回傳 {"final_answer":"錯誤: 欄位或格式錯誤說明"}。
-          """;
+                    注意：
+                    - 若想要系統僅模擬，請回傳 "mode":"simulate" 並在 actions 中包含要模擬的步驟；系統將不會實際執行 state-changing 工具。
+                    - 若要實際執行 state-changing 工具 (如 placeOrder)，請將 "executeConfirmed":true 放在回傳的 JSON 中來表示你同意系統執行。若缺少該欄位或為 false，系統將只模擬或跳過真正會改變狀態的操作。
+                    - 絕對不要輸出任何非 JSON 內容，否則後端會將其視為人類可讀回答並不會自動執行工具。
+                    """;
 
     private final OllamaChatModel chatModel;
     private final McpToolClient mcpToolClient;
     private final ObjectMapper objectMapper;
+    // set to true to enable verbose per-chunk streaming deltas (may be very noisy)
+    private static final boolean LOG_STREAM_DELTAS = false;
 
     /**
      * 處理用戶聊天請求，必要時呼叫 MCP 工具。
@@ -100,7 +89,9 @@ public class AiChatService {
                     // Spring AI Ollama stream may emit String chunks; handle as-is
                     String text = chunk == null ? "" : chunk;
                     buf.append(text);
-                    log.debug("[AI][delta] {}", text);
+                    if (LOG_STREAM_DELTAS) {
+                        log.debug("[AI][delta] {}", text);
+                    }
                 })
                 .doOnError(e -> log.error("[AI] stream error (initial)", e))
                 .doOnComplete(() -> log.info("[AI] initial stream complete, total={} chars", buf.length()))
@@ -110,38 +101,78 @@ public class AiChatService {
             long t1 = System.currentTimeMillis();
             log.debug("模型初步回應(assembled) ({} ms): {}", (t1 - t0), modelResponse);
 
-            Optional<ToolInvocation> maybeTool = parseToolInvocation(modelResponse);
-            if (maybeTool.isEmpty()) {
+            // Try to parse as either a single-action JSON or a multi-step plan with actions[]
+            ParsedPlan parsedPlan = extractPlanFromModelOutput(modelResponse);
+
+            if (parsedPlan == null) {
+                // Not a machine-actionable response; return final answer or raw text
                 return extractFinalAnswer(modelResponse, null);
             }
 
-            ToolInvocation invocation = maybeTool.get();
-            JsonNode toolResult = mcpToolClient.callTool(invocation.action(), invocation.arguments());
-            log.info("工具 {} 呼叫完成", invocation.action());
+            log.info("解析到模型計畫: mode={} actions={}", parsedPlan.mode, parsedPlan.actions == null ? 0 : parsedPlan.actions.size());
 
+            // If simulate mode, do not call execute tools; instead call tools that are read-only to gather data for the final answer
+            if ("simulate".equalsIgnoreCase(parsedPlan.mode)) {
+                // execute all read-only tools (getOrderBook/getMarketMetrics/getUserWallet/getUserOrders) and embed results
+                ObjectNode aggregated = objectMapper.createObjectNode();
+                if (parsedPlan.actions != null) {
+                    for (ObjectNode a : parsedPlan.actions) {
+                        String act = a.path("action").asText();
+                        ObjectNode args = (ObjectNode) a.path("arguments");
+                        if (isReadOnlyTool(act)) {
+                            JsonNode res = safeCallTool(act, args);
+                            aggregated.set(act, res == null ? objectMapper.nullNode() : res);
+                        }
+                    }
+                }
+
+                // Ask the model to produce a final_answer based on simulated tool outputs
+                String followUpPrompt = SYSTEM_PROMPT + "\n\n使用者提問：" + userMessage +
+                    "\n以下為我模擬（simulate）執行後蒐集到的工具結果（JSON）：\n" + aggregated.toPrettyString() +
+                    "\n要求：請仔細閱讀上方 JSON 格式的工具輸出，解析出重要的市場資訊（例如：最佳買賣價格 / 總買/賣量 / 是否存在明顯價格差距 / 建議的觀察或下單策略）。\n" +
+                    "輸出格式限制：嚴格回傳一個 JSON 物件，格式為 {\"final_answer\":\"...\"}。final_answer 的內容請使用自然中文，簡潔明確地總結市場狀況，並且不要直接回傳或包裹原始 JSON（不要出現像 \"工具回傳結果\":{...} 這類字樣）。\n" +
+                    "若要提出後續可執行的 action，請在 final_answer 中以自然語句建議，而不是在 JSON 的其他欄位輸出原始 actions。";
+
+                String finalResponse = streamModelAndAssemble(followUpPrompt, "followup");
+                return extractFinalAnswer(finalResponse, aggregated);
+            }
+
+            // mode == execute: we will attempt to execute actions[] sequentially but only for allowed tools
+            ObjectNode executionResults = objectMapper.createObjectNode();
+            if (parsedPlan.actions != null) {
+                for (ObjectNode a : parsedPlan.actions) {
+                    String act = a.path("action").asText();
+                    ObjectNode args = (ObjectNode) a.path("arguments");
+
+                    // Normalize and validate args (price/qty -> strings)
+                    normalizeArguments(args);
+
+                    if (!isAllowedTool(act)) {
+                        executionResults.put(act, "ERROR: tool not allowed or unknown");
+                        continue;
+                    }
+
+                    // For safety: skip state-changing ops unless explicitly execute-mode and client confirms
+                    if (isStateChangingTool(act) && !parsedPlan.executeConfirmed) {
+                        executionResults.put(act, "SKIPPED: requires explicit confirmation to execute");
+                        continue;
+                    }
+
+                    JsonNode res = safeCallTool(act, args);
+                    executionResults.set(act, res == null ? objectMapper.nullNode() : res);
+                    log.info("工具 {} 呼叫完成 (結果大小={} chars)", act, res == null ? 0 : res.toString().length());
+                }
+            }
+
+            // ask model to summarize based on execution results
             String followUpPrompt = SYSTEM_PROMPT + "\n\n使用者提問：" + userMessage +
-                "\n工具 " + invocation.action() + " 回傳的 JSON 結果如下：\n" + toolResult.toPrettyString() +
-                "\n請根據結果產出最終回答，僅以 {\"final_answer\":\"...\"} JSON 格式回覆。";
+                "\n已執行工具結果如下（JSON）：\n" + executionResults.toPrettyString() +
+                "\n要求：請解析上方 JSON 工具輸出，並以簡潔的中文總結目前市場狀況（例如：最佳買賣價、總買賣量、是否有大量掛單、任何對交易者重要的異常或風險）。\n" +
+                "輸出格式限制：嚴格回傳一個 JSON 物件，格式為 {\"final_answer\":\"...\"}。final_answer 請只包含中文自然語句；不要把原始 JSON 或工具回傳透過 \"工具回傳結果\" 再次輸出。\n" +
+                "若你建議進一步執行的動作，可以在 final_answer 內以自然語句提出建議（例如：建議下多單、觀察價格至 X 等），但不要在其他欄位產生原始 action JSON。";
 
-            // stream follow-up
-            StringBuilder buf2 = new StringBuilder();
-            long t2 = System.currentTimeMillis();
-            chatModel.stream(followUpPrompt)
-                .doOnSubscribe(s -> log.info("[AI] start streaming follow-up response..."))
-                .doOnNext(chunk -> {
-                    String text = chunk == null ? "" : chunk;
-                    buf2.append(text);
-                    log.debug("[AI][delta][followup] {}", text);
-                })
-                .doOnError(e -> log.error("[AI] stream error (followup)", e))
-                .doOnComplete(() -> log.info("[AI] follow-up stream complete, total={} chars", buf2.length()))
-                .blockLast();
-
-            String finalResponse = buf2.toString().trim();
-            long t3 = System.currentTimeMillis();
-            log.debug("模型最終回應(assembled) ({} ms): {}", (t3 - t2), finalResponse);
-
-            return extractFinalAnswer(finalResponse, toolResult);
+            String finalResponse = streamModelAndAssemble(followUpPrompt, "followup");
+            return extractFinalAnswer(finalResponse, executionResults);
 
         } catch (Exception e) {
             log.error("處理聊天請求失敗", e);
@@ -195,28 +226,10 @@ public class AiChatService {
         }
     }
 
-    private Optional<ToolInvocation> parseToolInvocation(String modelOutput) {
-        try {
-            JsonNode root = objectMapper.readTree(modelOutput);
-            JsonNode actionNode = root.path("action");
-            if (actionNode.isMissingNode() || actionNode.asText().isBlank()) {
-                return Optional.empty();
-            }
 
-            JsonNode arguments = root.path("arguments");
-            if (!arguments.isObject()) {
-                arguments = objectMapper.createObjectNode();
-            }
-
-            return Optional.of(new ToolInvocation(actionNode.asText(), (ObjectNode) arguments));
-
-        } catch (JsonProcessingException e) {
-            log.debug("模型輸出不是 JSON，視為最終回答: {}", modelOutput);
-            return Optional.empty();
-        }
-    }
 
     private String extractFinalAnswer(String modelOutput, JsonNode toolResultFallback) {
+        // If the model returned a JSON object containing final_answer, return that.
         try {
             JsonNode root = objectMapper.readTree(modelOutput);
             JsonNode finalAnswer = root.path("final_answer");
@@ -224,16 +237,156 @@ public class AiChatService {
                 return finalAnswer.asText();
             }
         } catch (JsonProcessingException e) {
-            log.debug("最終輸出非 JSON，直接回傳原文");
+            // ignore — we'll return raw modelOutput below
         }
 
-        if (toolResultFallback != null && !toolResultFallback.isEmpty()) {
-            return "工具回傳結果：\n" + toolResultFallback.toPrettyString();
-        }
-
-        return modelOutput;
+        // Otherwise, return the raw model output exactly as received (no heuristics/fallbacks).
+        return modelOutput == null ? "" : modelOutput;
     }
 
-    private record ToolInvocation(String action, ObjectNode arguments) {
+
+    /*
+     * Extract a machine-actionable plan from the model output.
+     * Handles cases where the model wraps JSON inside markdown code fences ```json ... ```
+     */
+    private ParsedPlan extractPlanFromModelOutput(String modelOutput) {
+        if (modelOutput == null || modelOutput.isBlank()) return null;
+
+        // try direct parse first
+        try {
+            JsonNode root = objectMapper.readTree(modelOutput);
+            return parsedPlanFromJson(root);
+        } catch (JsonProcessingException ignore) {
+        }
+
+        // try to extract code fence content (```json ... ``` or ``` ... ```)
+        String extracted = extractFirstJsonBlock(modelOutput);
+        if (extracted != null) {
+            try {
+                JsonNode root = objectMapper.readTree(extracted);
+                return parsedPlanFromJson(root);
+            } catch (JsonProcessingException e) {
+                log.debug("提取的區塊仍非 JSON: {}", extracted);
+            }
+        }
+
+        // try to find any {...} substring that is valid JSON
+        int start = modelOutput.indexOf('{');
+        while (start >= 0) {
+            int end = modelOutput.lastIndexOf('}');
+            if (end > start) {
+                String candidate = modelOutput.substring(start, end + 1);
+                try {
+                    JsonNode root = objectMapper.readTree(candidate);
+                    return parsedPlanFromJson(root);
+                } catch (JsonProcessingException e) {
+                    // try next occurrence
+                }
+            }
+            start = modelOutput.indexOf('{', start + 1);
+        }
+
+        return null;
+    }
+
+    private ParsedPlan parsedPlanFromJson(JsonNode root) {
+        if (root == null || root.isMissingNode()) return null;
+
+        String mode = root.path("mode").asText("execute");
+        boolean executeConfirmed = root.path("executeConfirmed").asBoolean(false);
+        java.util.List<ObjectNode> actions = null;
+        JsonNode actionsNode = root.path("actions");
+        if (actionsNode.isArray()) {
+            actions = new java.util.ArrayList<>();
+            for (JsonNode n : actionsNode) {
+                if (n.isObject()) {
+                    actions.add((ObjectNode) n);
+                }
+            }
+        }
+
+        return new ParsedPlan(mode, executeConfirmed, actions);
+    }
+
+    private String extractFirstJsonBlock(String text) {
+        if (text == null) return null;
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("```(?:json)?\\s*(\\{.*?\\})\\s*```", java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
+        java.util.regex.Matcher m = p.matcher(text);
+        if (m.find()) return m.group(1);
+        return null;
+    }
+
+    private String streamModelAndAssemble(String prompt, String tag) {
+        StringBuilder buf = new StringBuilder();
+        chatModel.stream(prompt)
+            .doOnSubscribe(s -> log.info("[AI] start streaming {} response...", tag))
+            .doOnNext(chunk -> {
+                String text = chunk == null ? "" : chunk;
+                buf.append(text);
+                if (LOG_STREAM_DELTAS) {
+                    log.debug("[AI][delta][{}] {}", tag, text);
+                }
+            })
+            .doOnError(e -> log.error("[AI] stream error ({})", tag, e))
+            .doOnComplete(() -> log.info("[AI] {} stream complete, total={} chars", tag, buf.length()))
+            .blockLast();
+
+        return buf.toString().trim();
+    }
+
+    private void normalizeArguments(ObjectNode args) {
+        if (args == null) return;
+        // ensure price and qty are strings
+        if (args.has("price") && !args.get("price").isTextual()) {
+            args.put("price", args.get("price").asText());
+        }
+        if (args.has("qty") && !args.get("qty").isTextual()) {
+            args.put("qty", args.get("qty").asText());
+        }
+        // also accept `quantity` alias and normalize to qty
+        if (args.has("quantity") && !args.has("qty")) {
+            args.put("qty", args.get("quantity").asText());
+            args.remove("quantity");
+        }
+    }
+
+    private boolean isReadOnlyTool(String name) {
+        return "getOrderBook".equals(name) || "getMarketMetrics".equals(name) || "getUserWallet".equals(name) || "getUserOrders".equals(name) || "checkUserExists".equals(name);
+    }
+
+    private boolean isStateChangingTool(String name) {
+        return "placeOrder".equals(name) || "cancelOrder".equals(name) || "registerUser".equals(name);
+    }
+
+    private boolean isAllowedTool(String name) {
+        // whitelist tools
+        return isReadOnlyTool(name) || isStateChangingTool(name) || "placeOrder".equals(name) || "registerUser".equals(name) || "cancelOrder".equals(name) || "checkUserExists".equals(name);
+    }
+
+    private JsonNode safeCallTool(String action, ObjectNode args) {
+        try {
+            // defensive: ensure args is non-null
+            if (args == null) args = objectMapper.createObjectNode();
+            // tool client may throw; catch and return an error node
+            JsonNode res = mcpToolClient.callTool(action, args);
+            return res == null ? objectMapper.nullNode() : res;
+        } catch (Exception e) {
+            log.error("呼叫工具 {} 失敗", action, e);
+            ObjectNode err = objectMapper.createObjectNode();
+            err.put("error", e.getMessage());
+            return err;
+        }
+    }
+
+    private static final class ParsedPlan {
+        final String mode;
+        final boolean executeConfirmed;
+        final java.util.List<ObjectNode> actions;
+
+        ParsedPlan(String mode, boolean executeConfirmed, java.util.List<ObjectNode> actions) {
+            this.mode = mode == null ? "execute" : mode;
+            this.executeConfirmed = executeConfirmed;
+            this.actions = actions;
+        }
     }
 }
