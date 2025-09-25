@@ -2,81 +2,34 @@ package com.eap.mcp.client;
 
 import com.eap.common.dto.UserRegistrationResponse;
 import com.eap.common.dto.WalletStatusResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.UUID;
 
-@Slf4j
-@Component
-public class WalletServiceClient {
-
-    private final RestTemplate restTemplate;
-    private final String walletServiceUrl;
-
-    public WalletServiceClient(RestTemplate restTemplate, 
-                              @Value("${eap.wallet.base-url:http://localhost:8081/eap-wallet}") String walletServiceUrl) {
-        this.restTemplate = restTemplate;
-        this.walletServiceUrl = walletServiceUrl;
-    }
+/**
+ * Wallet Service Feign client for MCP
+ */
+@FeignClient(name = "wallet-service", url = "${eap.wallet.base-url:http://localhost:8081/eap-wallet}")
+public interface WalletServiceClient {
 
     /**
      * 註冊新用戶並創建錢包
-     * @return 用戶註冊響應包含用戶 ID
      */
-    public UserRegistrationResponse registerUser() {
-        try {
-            String url = walletServiceUrl + "/v1/wallet/register";
-            log.info("調用錢包服務註冊用戶: {}", url);
-            
-            return restTemplate.postForObject(url, null, UserRegistrationResponse.class);
-            
-        } catch (Exception e) {
-            log.error("調用錢包服務註冊用戶失敗", e);
-            throw new RuntimeException("用戶註冊失敗: " + e.getMessage());
-        }
-    }
+    @PostMapping("/v1/wallet/register")
+    UserRegistrationResponse registerUser();
 
     /**
      * 查詢用戶錢包狀態
-     * @param userId 用戶 ID
-     * @return 錢包狀態響應
      */
-    public WalletStatusResponse getWalletStatus(UUID userId) {
-        try {
-            String url = walletServiceUrl + "/v1/wallet/status/" + userId;
-            log.info("查詢用戶錢包狀態: {}", url);
-            
-            return restTemplate.getForObject(url, WalletStatusResponse.class);
-            
-        } catch (HttpClientErrorException.NotFound e) {
-            log.warn("用戶錢包不存在: userId={}", userId);
-            return null;
-        } catch (Exception e) {
-            log.error("查詢用戶錢包狀態失敗: userId={}", userId, e);
-            throw new RuntimeException("查詢錢包狀態失敗: " + e.getMessage());
-        }
-    }
+    @GetMapping("/v1/wallet/status/{userId}")
+    WalletStatusResponse getWalletStatus(@PathVariable("userId") UUID userId);
 
     /**
      * 檢查用戶是否存在
-     * @param userId 用戶 ID
-     * @return 是否存在
      */
-    public boolean checkUserExists(UUID userId) {
-        try {
-            String url = walletServiceUrl + "/v1/wallet/exists/" + userId;
-            log.info("檢查用戶是否存在: {}", url);
-            
-            Boolean exists = restTemplate.getForObject(url, Boolean.class);
-            return exists != null && exists;
-            
-        } catch (Exception e) {
-            log.error("檢查用戶存在性失敗: userId={}", userId, e);
-            return false;
-        }
-    }
+    @GetMapping("/v1/wallet/exists/{userId}")
+    Boolean checkUserExists(@PathVariable("userId") UUID userId);
 }

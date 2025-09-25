@@ -1,19 +1,20 @@
 package com.eap.ai.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.ai.chat.client.ChatClient;
 
 
-
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class AiChatService {
+    
+    @Autowired
+    private  ChatClient chatClient;
 
-    private final ChatClient chatClient;
+   
 
         private static final String SYSTEM_PROMPT = """
                         你是 EAP 電力交易平台的輔助工具。當需要查詢或執行工具時，請直接回傳該工具的執行結果文字（或可以被人類閱讀的結構化文字）。
@@ -26,15 +27,17 @@ public class AiChatService {
                         可用工具（參考）： getOrderBook, getMarketMetrics, placeOrder, cancelOrder, getUserOrders, registerUser, runSimulation, exportReport
                         """;
 
+ 
+
     // ===== 公開入口：單輪規劃 → 執行 → 回傳結果 =====
     public String chat(String userMessage) {
         try {
             log.info("收到用戶訊息: {}", userMessage);
 
             String prompt = SYSTEM_PROMPT + "\n使用者提問：" + userMessage;
-            String modelOut = chatClient.prompt(prompt).call().content();
 
-            // 直接回傳 LLM 的文字輸出
+            String modelOut = chatClient.prompt(prompt).call().content();
+            log.info("Ai response:" + modelOut);
             return modelOut == null ? "錯誤：未取得模型回應" : modelOut;
 
         } catch (Exception e) {
@@ -51,7 +54,7 @@ public class AiChatService {
      */
     public String getSystemStatus() {
         try {
-            return "chatClient=" + (chatClient == null ? "missing" : "ok");
+            return "chatClient=" + (chatClient == null ? "missing" : "ok") ;
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();
         }
