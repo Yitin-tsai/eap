@@ -18,10 +18,7 @@ public class UserManagementMcpTool {
     @Autowired
     private WalletServiceClient walletServiceClient;
 
-    /**
-     * 註冊新用戶並創建錢包
-     * 每個新用戶將獲得 10000 電力和 10000 金額的初始餘額
-     */
+    
     @Tool(name = "registerUser", description = "註冊新用戶並創建錢包，新用戶將獲得 10000 電力和 10000 金額的初始餘額")
     public UserRegistrationResponse registerUser() {
         try {
@@ -42,9 +39,6 @@ public class UserManagementMcpTool {
         }
     }
 
-    /**
-     * 查詢用戶錢包狀態
-     */
     @Tool(name = "getUserWallet", description = "查詢指定用戶的錢包狀態，包括可用餘額和鎖定餘額")
     public WalletStatusResponse getUserWallet(@ToolParam(description = "用戶ID (UUID格式)", required = true) String userId) {
         try {
@@ -65,9 +59,6 @@ public class UserManagementMcpTool {
         }
     }
 
-        /**
-     * 檢查用戶是否存在
-     */
     @Tool(name = "checkUserExists", description = "檢查指定的用戶ID是否存在於系統中")
     public boolean checkUserExists(@ToolParam(description = "用戶ID (UUID格式)", required = true) String userId) {
         try {

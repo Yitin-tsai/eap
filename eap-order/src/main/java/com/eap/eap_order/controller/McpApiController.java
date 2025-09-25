@@ -28,8 +28,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -55,10 +53,6 @@ public class McpApiController {
     @Autowired
     private EapMatchEngine eapMatchEngine;
 
-    /**
-     * 統一下單接口 (支援買賣雙向)
-     * POST /mcp/v1/orders
-     */
     @Operation(summary = "統一下單", description = "支援買賣雙向的統一下單接口")
     @ApiResponse(responseCode = "200", description = "下單成功")
     @PostMapping("/orders")
@@ -88,8 +82,7 @@ public class McpApiController {
                 sellReq.setSellPrice(request.getPriceAsInt());
                 sellReq.setAmount(request.getQtyAsInt());
                 sellReq.setSeller(UUID.fromString(request.getUserId()));
-                placeSellOrderService.placeSellOrder(sellReq);
-                orderId = UUID.randomUUID(); // 暫時生成，實際應該從服務返回
+                orderId = placeSellOrderService.placeSellOrder(sellReq);
             } else {
                 return ResponseEntity.badRequest().body(
                     PlaceOrderResponse.failure("Invalid side: " + request.getSide()));
@@ -113,10 +106,6 @@ public class McpApiController {
         }
     }
 
-    /**
-     * 取消訂單
-     * DELETE /mcp/v1/orders/{orderId}
-     */
     @Operation(summary = "取消訂單", description = "根據訂單ID取消訂單")
     @ApiResponse(responseCode = "200", description = "取消成功")
     @DeleteMapping("/orders/{orderId}")
@@ -126,12 +115,12 @@ public class McpApiController {
         log.info("收到 MCP 取消訂單請求: {}", orderId);
         
         try {
-            // 構建取消事件
+            
             OrderCancelEvent cancelEvent = OrderCancelEvent.builder()
                 .orderId(UUID.fromString(orderId))
                 .build();
             
-            // 調用取消服務
+            
             eapMatchEngine.cancelOrder(cancelEvent);
             
             return ResponseEntity.ok(CancelOrderResponse.success(orderId));
@@ -143,10 +132,6 @@ public class McpApiController {
         }
     }
 
-    /**
-     * 查詢用戶訂單
-     * GET /mcp/v1/orders
-     */
     @Operation(summary = "查詢用戶訂單", description = "根據用戶ID查詢訂單列表")
     @ApiResponse(responseCode = "200", description = "查詢成功")
     @GetMapping("/orders")
@@ -176,10 +161,7 @@ public class McpApiController {
         }
     }
 
-    /**
-     * 獲取訂單簿
-     * GET /mcp/v1/orderbook
-     */
+ 
     @Operation(summary = "獲取訂單簿", description = "獲取當前市場訂單簿數據")
     @ApiResponse(responseCode = "200", description = "獲取成功")
     @GetMapping("/orderbook")
@@ -189,7 +171,7 @@ public class McpApiController {
         log.info("收到 MCP 獲取訂單簿請求: depth={}", depth);
         
         try {
-            // 限制最大深度以避免過大的響應
+            // 限制最大深度以避免回傳過多不需要資訊
             int depthN = Math.min(depth, 20);
             
             // 直接從 MatchEngine 獲取訂單簿數據
@@ -208,7 +190,6 @@ public class McpApiController {
             
         } catch (Exception e) {
             log.error("獲取訂單簿失敗", e);
-            // 返回空的訂單簿而不是錯誤
             OrderBookResponseDto emptyOrderBook = OrderBookResponseDto.builder()
                 .bids(new ArrayList<>())
                 .asks(new ArrayList<>())
@@ -217,10 +198,7 @@ public class McpApiController {
         }
     }
 
-    /**
-     * 獲取市場指標
-     * GET /mcp/v1/metrics
-     */
+   
     @Operation(summary = "獲取市場指標", description = "獲取詳細的市場分析指標")
     @ApiResponse(responseCode = "200", description = "獲取成功")
     @GetMapping("/metrics")
@@ -230,10 +208,10 @@ public class McpApiController {
         log.info("收到 MCP 獲取市場指標請求: depth={}", depth);
         
         try {
-            // 獲取市場摘要
+      
             ResponseEntity<MarketSummaryDto> marketSummary = eapMatchEngine.getMarketSummary();
             
-            // 獲取訂單簿進行深度分析
+            
             int depthN = Math.min(depth, 20); // 限制最大深度
             ResponseEntity<OrderBookResponseDto> orderBook = eapMatchEngine.getOrderBook(depthN);
             

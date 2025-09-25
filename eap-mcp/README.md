@@ -9,19 +9,14 @@ EAP 電力交易平台的 Model Context Protocol (MCP) 服務器，為 LLM 提�
 - **市場數據查詢**: 獲取實時訂單簿、交易記錄和市場指標
 - **訂單管理**: 支持下單、取消、查詢等操作（Phase 2）
 - **風險控制**: 內建頻率限制和錯誤處理機制
-- **審計追蹤**: 完整的操作日誌和性能監控
+ 
 
 ### 架構設計
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   LLM Client    │───▶│   EAP MCP       │───▶│  Order Service  │
-│   (Claude/GPT)  │    │   Server        │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                       ┌─────────────────┐
-                       │  Match Engine   │
-                       │                 │
+│   (Ollama)      │    │   Server        │    │                 │
+└─────────────────┘    │  Match Engine   │    └─────────────────┘             
                        └─────────────────┘
 ```
 
@@ -29,7 +24,6 @@ EAP 電力交易平台的 Model Context Protocol (MCP) 服務器，為 LLM 提�
 
 ### 前置需求
 - Java 17+
-- Redis (用於頻率限制)
 - eap-order 服務運行在 localhost:8081
 - eap-matchEngine 服務運行在 localhost:8082
 
@@ -125,23 +119,18 @@ Content-Type: application/json
 ```
 src/main/java/com/eap/mcp/
 ├── EapMcpApplication.java          # 主應用程式
-├── client/                         # Feign 客戶端
+├── client/                         # Feign / HTTP 客戶端
 │   ├── OrderServiceClient.java     # Order Service 客戶端
-│   └── MatchEngineClient.java      # Match Engine 客戶端
+│   └── WalletServiceClient.java    # Wallet / User 客戶端
 ├── config/                         # 配置類
-│   └── McpConfig.java              # MCP 配置
-├── controller/                     # REST 控制器
-│   └── McpController.java          # MCP API 控制器
-├── dto/                           # 資料傳輸對象
-│   ├── McpErrorResponse.java       # 錯誤回應格式
-│   ├── PlaceOrderRequest.java      # 下單請求
-│   └── PlaceOrderResponse.java     # 下單回應
-├── service/                       # 業務服務
-│   └── McpToolService.java        # 工具管理服務
+│   ├── McpToolConfig.java          # 將 @Tool 註解的方法匯出為工具
+│   └── RestTemplateConfig.java     # RestTemplate / HTTP 設定
 └── tools/                         # MCP 工具實現
-    ├── GetOrderBookTool.java       # 訂單簿工具
-    ├── GetTradesTool.java          # 交易記錄工具
-    └── GetMetricsTool.java         # 指標工具
+  └── mcp/
+    ├── OrderBookMcpTool.java       # 訂單簿工具 (getOrderBook)
+    ├── MarketMetricsMcpTool.java    # 市場指標工具 (getMarketMetrics)
+    ├── TradingMcpTool.java          # 交易工具 (placeOrder, cancelOrder, getUserOrders)
+    └── UserManagementMcpTool.java   # 用戶/錢包管理工具 (registerUser, getUserWallet, checkUserExists)
 ```
 
 ### 配置文件
@@ -161,55 +150,58 @@ mcp:
   rate-limit:
     enabled: true
     requests-per-minute: 60
-  audit:
-    enabled: true
 ```
 
-### 添加新工具
+### 添加新工具（使用 Spring @Tool）
 
-1. **創建工具類**
+本專案支援以 Spring 的註解方式暴露 MCP 工具：使用 `@Tool` 標記方法，並用 `@ToolParam` 描述參數。`McpToolConfig` 會掃描並自動將這些註解的方法註冊為 MCP 可呼叫的工具。
+
+1. **創建工具類（範例）**
 ```java
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class NewTool {
-    public Object execute(Map<String, Object> parameters) {
-        // 工具邏輯
-    }
-    
-    public String getName() { return "toolName"; }
-    public String getDescription() { return "工具描述"; }
-    public Map<String, Object> getSchema() { 
-        // JSON Schema
-    }
+  @Tool(name = "toolName", description = "工具描述")
+  public Map<String, Object> toolName(
+    @ToolParam(description = "參數 a", required = true) String a,
+    @ToolParam(description = "參數 b", required = false) Integer b
+  ) {
+    // 工具邏輯
+    return Map.of("ok", true);
+  }
 }
 ```
 
-2. **註冊到 McpToolService**
-```java
-case "toolName":
-    return newTool.execute(parameters);
+2. **自動註冊**
+
+`McpToolConfig` 會在啟動時掃描 Spring 容器中帶有 `@Tool` 註解的方法並將其匯出為 MCP 工具清單，無需手動改動 `McpToolService` 的程式碼來註冊單一工具。
+
+3. **驗證工具可用性**
+
+啟動後可透過以下 API 查看已註冊的工具：
+
+```bash
+curl http://localhost:8083/mcp/tools
 ```
+若工具未出現在列表，請檢查該類是否為 Spring 管理的 bean（例如 `@Component`）以及是否正確使用 `@Tool` 註解。
 
 ## Phase 2 規劃
 
-### 交易工具
-- `placeOrder`: 下單功能
-- `cancelOrder`: 取消訂單
-- `getOrder`: 查詢訂單詳情
-- `listOrders`: 查詢訂單列表
+### 已有／預定的工具（Phase 1 / Phase 2 範例）
 
-### 模擬功能
-- `loadScenario`: 載入交易場景
-- `spawnAgents`: 生成交易代理
-- `runSimulation`: 執行模擬
-- `computeLoss`: 計算損失
-- `sweep`: 參數掃描
+目前 MCP 模組已提供下列可被 LLM 或外部客戶端呼叫的工具（方法名稱即為工具名稱）：
 
-### 報告功能
-- `exportReport`: 匯出分析報告
+- `getOrderBook(depth?)` — 取得訂單簿（對應 `OrderBookMcpTool.getOrderBook`）
+- `getMarketMetrics()` — 取得市場指標（對應 `MarketMetricsMcpTool.getMarketMetrics`）
+- `placeOrder(userId, side, price, qty, symbol?)` — 下單（對應 `TradingMcpTool.placeOrder`）
+- `cancelOrder(orderId)` — 取消訂單（對應 `TradingMcpTool.cancelOrder`）
+- `getUserOrders(userId)` — 查詢用戶訂單（對應 `TradingMcpTool.getUserOrders`）
 
-## 監控和運維
+## 與 LLM 的互動建議
+
+關於 LLM 的系統提示（SYSTEM_PROMPT）、模型使用範例與如何讓 LLM 呼叫 MCP 工具的詳細指引，請移至 `eap/eap-ai-client/README.md`。AI client 將負責與模型的交互與提示設定。
+
 
 ### 健康檢查
 ```bash
@@ -237,40 +229,5 @@ curl http://localhost:8083/actuator/prometheus
 - 不暴露內部實現細節
 - 完整的錯誤追蹤
 
-### 審計日誌
-- 記錄所有工具呼叫
-- 包含請求參數和執行結果
-- 性能指標收集
 
-## 故障排除
 
-### 常見問題
-
-1. **連接 order-service 失敗**
-   - 檢查 order-service 是否運行
-   - 確認 base-url 配置正確
-
-2. **Redis 連接錯誤**
-   - 檢查 Redis 服務狀態
-   - 確認連接參數配置
-
-3. **工具執行失敗**
-   - 查看詳細錯誤日誌
-   - 驗證輸入參數格式
-
-### 日誌位置
-- 應用日誌: stdout
-- 錯誤日誌: stderr
-- 審計日誌: Redis/檔案系統
-
-## 貢獻指南
-
-1. Fork 項目
-2. 創建功能分支
-3. 提交變更
-4. 推送到分支
-5. 創建 Pull Request
-
-## 授權
-
-本項目採用 MIT 授權條款。

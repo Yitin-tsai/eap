@@ -1,9 +1,6 @@
 package com.eap.eap_order.controller;
 
-import com.eap.eap_order.application.PlaceBuyOrderService;
-import com.eap.eap_order.application.PlaceSellOrderService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -34,7 +31,7 @@ public class OrderStatusController {
 
         // 立即發送當前狀態
         try {
-            String currentStatus = orderStatus.getOrDefault(orderId.toString(), "PENDING_WALLET_CHECK");
+            String currentStatus = orderStatus.getOrDefault(orderId, "PENDING_WALLET_CHECK");
             Map<String, Object> statusData = Map.of(
                 "orderId", orderId,
                 "status", currentStatus,
@@ -56,7 +53,7 @@ public class OrderStatusController {
         emitter.onCompletion(() -> {
             orderEmitters.remove(orderId);
             // 清理完成的訂單狀態
-            orderStatus.remove(orderId.toString());
+            orderStatus.remove(orderId);
             log.info("SSE連接已關閉: {}", orderId);
         });
 
@@ -99,7 +96,7 @@ public class OrderStatusController {
                 if ("MATCHED".equals(status) || "INSUFFICIENT_BALANCE".equals(status) || "FAILED".equals(status)) {
                     emitter.complete();
                     orderEmitters.remove(orderId);
-                    orderStatus.remove(orderId.toString());
+                    orderStatus.remove(orderId);
                 }
             } catch (IOException e) {
                 log.error("推送狀態更新失敗: {}", e.getMessage());
@@ -114,7 +111,7 @@ public class OrderStatusController {
      */
     @GetMapping("/order/{orderId}/status")
     public Map<String, Object> getOrderStatus(@PathVariable UUID orderId) {
-        String status = orderStatus.getOrDefault(orderId.toString(), "NOT_FOUND");
+    String status = orderStatus.getOrDefault(orderId, "NOT_FOUND");
         return Map.of(
             "orderId", orderId,
             "status", status,

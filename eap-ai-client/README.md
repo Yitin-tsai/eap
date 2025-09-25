@@ -46,6 +46,30 @@ cd /Users/cfh00909120/eap
 - 第三步：模型收到結果後回傳 `{"final_answer":"..."}` 供使用者閱讀
 若模型未請求工具，會直接回傳 `final_answer`。
 
+### LLM 互動指引（已更新）
+
+目前 AI client 不再強制模型輸出嚴格格式的 JSON 計畫；建議做法：
+
+- 直接請模型執行任務（例如「幫我執行模擬」）。模型可以呼叫 MCP 工具並直接在回覆中返回該工具的輸出（文字或結構化資料）。
+- 如果模型描述如何呼叫工具，最終應該以 MCP `/mcp/tools/{toolName}/call` 發起請求，並把工具結果回傳給使用者。
+- 注意：live 下單（例如 `placeOrder` 並且 `executeReal=true`）會改變系統狀態，請僅在受控環境或啟用安全閘時使用。
+
+範例：呼叫 `runSimulation`（curl）
+```bash
+curl -X POST http://localhost:8083/mcp/tools/runSimulation/call \
+  -H 'Content-Type: application/json' \
+  -d '{"arguments": {"symbol":"ELC","steps":10,"threshold":0.02,"qty":10,"priceStrategy":"topBid","sides":"BOTH","ordersPerStep":2,"executeReal":false,"userId":"test-user"}}'
+```
+
+範例：匯出最近的模擬報表（MVP）
+```bash
+curl -X POST http://localhost:8083/mcp/tools/exportReport/call \
+  -H 'Content-Type: application/json' \
+  -d '{"arguments": {"id":"latest"}}'
+```
+
+備註：詳細的系統提示（SYSTEM_PROMPT）與交互行為，請檢查 `AiChatService.SYSTEM_PROMPT` 的實作以取得最新文檔或自定義提示。
+
 ### REST API 接口
 - **聊天**: `POST http://localhost:8084/api/chat`
   ```json

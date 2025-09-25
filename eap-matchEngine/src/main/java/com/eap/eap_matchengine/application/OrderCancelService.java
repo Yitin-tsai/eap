@@ -1,7 +1,6 @@
 package com.eap.eap_matchengine.application;
 
 import com.eap.common.event.OrderCancelEvent;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

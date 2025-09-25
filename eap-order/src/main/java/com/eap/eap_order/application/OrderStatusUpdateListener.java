@@ -9,8 +9,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.util.UUID;
 
 import static com.eap.common.constants.RabbitMQConstants.*;
 

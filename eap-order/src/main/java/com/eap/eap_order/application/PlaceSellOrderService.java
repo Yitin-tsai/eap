@@ -1,7 +1,6 @@
 package com.eap.eap_order.application;
 
-import com.eap.common.event.OrderCreatedEvent;
-import com.eap.eap_order.application.OutBound.EapWallet;
+// ...existing code...
 import com.eap.eap_order.controller.dto.req.PlaceSellOrderReq;
 import com.eap.eap_order.domain.entity.Order.OrderType;
 import com.eap.common.event.OrderCreateEvent;
@@ -23,7 +22,7 @@ public class PlaceSellOrderService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    public void placeSellOrder(PlaceSellOrderReq request) {
+    public UUID placeSellOrder(PlaceSellOrderReq request) {
 
         OrderCreateEvent event =
                 OrderCreateEvent.builder()
@@ -39,5 +38,6 @@ public class PlaceSellOrderService {
         // 直接發送事件，讓wallet-service異步處理
         rabbitTemplate.convertAndSend(ORDER_EXCHANGE, ORDER_CREATE_KEY, event);
         log.info("Sell order create event published: {}", event);
+        return event.getOrderId();
     }
 }
