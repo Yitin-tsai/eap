@@ -61,11 +61,6 @@ public class ChatCommandLineInterface {
                     break;
                 }
 
-                if ("status".equalsIgnoreCase(input)) {
-                    System.out.println("\n🤖 系統狀態:");
-                    System.out.println(aiChatService.getSystemStatus());
-                    continue;
-                }
 
                 if ("help".equalsIgnoreCase(input)) {
                     showHelp();

@@ -55,41 +55,4 @@ public class AiChatController {
         }
     }
 
-    /**
-     * 獲取系統狀態
-     * GET /api/chat/status
-     */
-    @GetMapping("/status")
-    public ResponseEntity<Map<String, Object>> getStatus() {
-        try {
-            String status = aiChatService.getSystemStatus();
-            
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "status", status,
-                "timestamp", LocalDateTime.now()
-            ));
-
-        } catch (Exception e) {
-            log.error("獲取狀態失敗", e);
-            return ResponseEntity.internalServerError().body(Map.of(
-                "success", false,
-                "error", "獲取狀態失敗：" + e.getMessage(),
-                "timestamp", LocalDateTime.now()
-            ));
-        }
-    }
-
-    /**
-     * 健康檢查端點
-     * GET /api/chat/health
-     */
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> health() {
-        return ResponseEntity.ok(Map.of(
-            "status", "UP",
-            "service", "EAP AI Chat Service",
-            "timestamp", LocalDateTime.now().toString()
-        ));
-    }
 }

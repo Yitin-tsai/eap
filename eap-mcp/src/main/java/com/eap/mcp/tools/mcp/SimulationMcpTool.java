@@ -1,10 +1,14 @@
-package com.eap.mcp.simulation;
+package com.eap.mcp.tools.mcp;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
+
+import com.eap.mcp.simulation.SimulationRequest;
+import com.eap.mcp.simulation.SimulationResult;
+import com.eap.mcp.simulation.SimulationService;
 
 /**
  * MCP 工具：模擬服務

@@ -8,19 +8,6 @@ spring:
   cloud:
     compatibility-verifier:
       enabled: false
-  
-  # Redis configuration for rate limiting and caching
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      database: 2  # Use different database from order service
-      timeout: 2000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
 
   # Spring AI MCP configuration
   ai:
@@ -40,9 +27,6 @@ eap:
   
   wallet:
     base-url: http://localhost:8081/eap-wallet
-  
-  match-engine:
-    base-url: http://localhost:8082/match-engine
 
 # MCP Server configuration
 mcp:

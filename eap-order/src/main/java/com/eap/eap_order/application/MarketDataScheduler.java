@@ -17,9 +17,9 @@ public class MarketDataScheduler {
     private final MarketDataService marketDataService;
     
     /**
-     * 每30秒推送一次市場統計數據
+     * 每30分鐘推送一次市場統計數據
      */
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 30000 * 60)
     public void pushMarketDataPeriodically() {
         try {
             marketDataService.pushMarketData();
@@ -29,9 +29,9 @@ public class MarketDataScheduler {
     }
     
     /**
-     * 每10秒推送一次訂單簿數據
+     * 每10分鐘推送一次訂單簿數據
      */
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 10000*60)
     public void pushOrderBookPeriodically() {
         try {
             marketDataService.pushOrderBook();
@@ -41,10 +41,10 @@ public class MarketDataScheduler {
     }
     
     /**
-     * 每10秒推送一次最近成交資訊
+     * 每10分鐘推送一次最近成交資訊
      * 定期為所有訂閱客戶端更新成交歷史
      */
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 10000 * 60)
     public void pushRecentTradesPeriodically() {
         try {
             marketDataService.pushRecentTrades();

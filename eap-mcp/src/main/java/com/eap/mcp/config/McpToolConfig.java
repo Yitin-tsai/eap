@@ -2,9 +2,10 @@ package com.eap.mcp.config;
 
 import com.eap.mcp.tools.mcp.MarketMetricsMcpTool;
 import com.eap.mcp.tools.mcp.OrderBookMcpTool;
+import com.eap.mcp.tools.mcp.SimulationMcpTool;
 import com.eap.mcp.tools.mcp.TradingMcpTool;
 import com.eap.mcp.tools.mcp.UserManagementMcpTool;
-import com.eap.mcp.simulation.SimulationMcpTool;
+
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.context.annotation.Bean;
