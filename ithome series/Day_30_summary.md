@@ -84,7 +84,7 @@
 ---
 
 ## 四、跨篇章的關鍵決策（Trade-offs）
-- **簡單命名 > 巧妙縮寫**：事件/Queue 名稱能說人話，日後維護靠它。  
+- **簡單命名 > 巧妙縮寫**：事件/Queue 名稱可讀，日後維護靠它。  
 - **「現在可行」>「未來也許更快」**：先用 Redis ZSET 支撐當前吞吐；觀測到瓶頸再演進。  
 - **契約先行 > 界面猜測**：OpenAPI/Contract 減少跨組誤解。  
 - **統一呼叫層 > 分散自定義**：Feign/WebClient 集中治理超時/重試/錯誤碼。  
@@ -98,7 +98,7 @@
 - Redis Order Book 可查 Top-N，撮合流程能產生日誌與事件。  
 - WebSocket/SSE 能把 order book 與市況快照推給外部。  
 - OpenAPI + Contract/Integration 保證主要通道「別人照著文件就能跑起來」。  
-- AiChatService 能把 Plan 解析、過 Gate、呼叫 MCP，**失敗不拖累整體**。
+- AiChatService 能把 Plan 解析、過 Gate、呼叫 MCP執行下單、查詢。
 
 ---
 
